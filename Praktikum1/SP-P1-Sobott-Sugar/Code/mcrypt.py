@@ -16,8 +16,8 @@ def mul_inverse(n, m):
     Returns:    n^-1 e [0,1,2..m-1] if there is exactly one multiplicative
                 inverse (e.g. gcd(n, m) != 1), None otherwise.
     """
-    if gcd(n, m) != 1:
-        return None
+    #if gcd(n, m) != 1:
+    #    return None
 
     module = m
     x = 1
@@ -27,6 +27,9 @@ def mul_inverse(n, m):
     while m != 0:
         q += [n // m]
         (n, m) = (m , n % m)
+
+    if n != 1:
+        return None
 
     q.reverse()
 
@@ -40,4 +43,4 @@ def mul_inverse(n, m):
 
 
 if __name__ == '__main__':
-    pass
+    print(mul_inverse(75, 38))

@@ -82,6 +82,136 @@ Um den String schlussendlich zu bauen benötigt es dann nur einen Einzeiler.
 
 Dadurch, dass \texttt{decode()} und \texttt{encode()} jeweils Funktion und Umkehrfunktion darstellen ergibt sich: w = encode(decode(w)).
 
+
+% ----------------------------------------------------------------------------
+\subsection{Zu Aufgabe 3}
+% ----------------------------------------------------------------------------
+Um das gewünschte Dictionary \texttt{key\_table} zu erstellen, haben wir die gleichnamige Funktion \texttt{key\_table(m: int)} implementiert. Diese ermöglicht es nicht nur \texttt{key\_table} für $\mathbb{Z}_{26}$, sondern allgemein für $\mathbb{Z}_{m},  m \geq 2$ anzulegen. Dabei wird mithilfe einer For-Loop über alle $ a \in \{1,2,..,m-1\}$ iteriert und deren multiplikativ Inverses, mithilfe von \texttt{mcrypt.mul\_inverse(n, m)}, berechnet. Falls ein mult. Inverses existiert wird dieses dann nach dem Schema \texttt{$a:a^{-1}$} dem Dictionary hinzugefügt. Sollte $m < 2$ oder ein invalider Datentyp übergeben werden, wird \texttt{None} zurückgegeben. Andernfalls gibt die Funktion das erstellte Dictionary zurück. 
+\begin{lstlisting}
+for i in range(m):
+     i_neg = mul_inverse(i, m)	# Berechnung d. mult. Inv.
+ 	
+     if i_neg != None:
+         d[i] = i_neg		# Es gibt ein mult. Inv. -> add to dict
+\end{lstlisting}
+
+\subsubsection{Berechnung des multiplikativ Inversen}
+Zur Berechnung des multiplikativ Inversen wird die Funktion \texttt{mul\_inverse(n: int, m: int)} genutzt, die auf dem erweiterten Euklid'schen Algorithmus beruht. Grundsätzlich gilt, wenn es zu $n \in Z_{m}$ eine Zahl $x \in \mathbb{Z}_{m}$ gibt mit $n * x = 1 (mod \, m)$, so wird $x$ als multiplikativ Inverses zu n in m bezeichnet, schreibe $n^{-1}$ oder $\frac{1}{n}$.
+
+Die Definition des multiplikativ Inversen bedeutet jedoch, dass sich $n * x$ und $1$ um ein Vielfaches von $m$ unterscheiden, d.h. $n*x + m*y = 1$. Für Gleichungen dieser Art kann nun x und y mithilfe des erweiterten Euklid bestimmt werden.
+
+Anfangs wird jedoch erst einmal geprüft, ob n teilerfremd zu m ist und parallel die einzelnen Teiler jeder Division für später in einer Liste gespeichert.
+\begin{lstlisting}
+q = []					# Liste von Teilern
+
+while m != 0:
+	q += [n // m]		# Teiler hinzufügen
+	(n, m) = (m, n % m)
+	
+if n != 1:
+	return None			# n und m Teilerfremd ?
+\end{lstlisting}
+Dies ist zwingend notwendig, denn sollte gelten, dass n und m einen gemeinsamen Teiler $t > 1 \in \mathbb{Z}$ besitzen, dann gilt: $n = t\hat{n}$ und $m = t\hat{m}$, d.h. $nx = 1 (mod \, m) = t\hat{n}x - t\hat{m}y = 1 = t(\hat{n}x - \hat{m}y) = 1$. Es gibt jedoch kein $t > 1$, das diese Gleichung erfüllt, demnach müssen n und m teilerfremd sein.
+
+Danach werden mittels der Teiler aus q, x und y berechnet, wobei nur x von Interesse ist und als Rückgabewert dient. Das letzte Statement dient dazu, dass x in $\mathbb{Z}_{m}$ liegt.
+\begin{lstlisting}
+q.reverse()
+x = 1
+y = 0
+
+for t in q:
+	_x = y
+	_y = x - (_x * t)
+	x = _x
+	y = _y
+	
+return (x + module) % module
+\end{lstlisting}
+
+%
+ ----------------------------------------------------------------------------
+\subsection{Zu Aufgabe 4}
+% ----------------------------------------------------------------------------
+\texttt{acEncrypt(a, b, text)} nutzt zuerst \texttt{decode()} um mithilfe des gegebenen Textes eine entsprechende Liste von Ganzzahlen zu erzeugen. 
+\begin{lstlisting}
+t = decode(plain_text)
+\end{lstlisting}
+Danach wird über jedes Element der Liste iteriert und dieses mithilfe des Schlüssels \texttt{(a, b)} verschlüsselt. 
+\begin{lstlisting}
+for i in range(len(t)):
+	t[i] = (a * t[i] + b) % module
+\end{lstlisting}
+Schlussendlich wird die verschlüsselte Liste an \texttt{encode()} übergeben, die alle Zahlen wieder in einen String umwandelt, der danach zurückgegeben wird.
+\begin{lstlisting}
+e = encode(t)
+return e.upper()
+\end{lstlisting}
+
+Anfangs prüft die Funktion, ob überhaupt die richtigen Datentypen übergeben wurden. Sollte dies nicht der Fall sein, wird vom \texttt{logger} eine entsprechende Nachricht mit dem Level \texttt{Warning} ausgegeben und ein leerer String zurückgegeben.
+Sollte a nicht teilerfremd zu 26 sein, wird ebenfalls eine Nachricht geloggt, dieses mal mit dem Level \texttt{Info} und ein leerer String zurückgegeben.
+
+Damit Einträge des Levels Info angezeigt werden, muss das jeweilige Script mit der Option \texttt{'-v' (verbose)} ausgeführt werden. 
+
+%
+ ----------------------------------------------------------------------------
+\subsection{Zu Aufgabe 5}
+% ----------------------------------------------------------------------------
+Die Fehlerprüfung von \texttt{acDecrypt()} ist identisch zu der von \texttt{acEncrypt}. 
+
+Nachdem auf Fehler geprüft wurde, wird als erstes dafür gesorgt, dass der Teilschlüssel a in $\mathbb{Z}_{26}$ liegt. Dadurch wird sichergestellt, das bei einem späteren Hash-Table lookup auch an der richtigen Stelle 'gesucht' wird.
+\begin{lstlisting}
+a = a % module
+\end{lstlisting}
+
+Danach wird ein entsprechendes \texttt{key\_table} erzeugt.
+\begin{lstlisting}
+table = key_table(module)
+\end{lstlisting}
+
+Schlussendlich wird mit $(y - b) * a^{-1} = x$ jede Ziffer des übergebenen Cipher-Textes wieder entschlüsselt und zu einem String zusammengefügt, der als Rückgabewert dient. $a^{-1}$ wird dabei in \texttt{table} mithilfe von \texttt{a} nachgeschlagen.
+\begin{lstlisting}
+return encode([ ((y - b) * table[a]) % modulo for y in decode(cipher_text) ])
+\end{lstlisting}
+
+%
+ ----------------------------------------------------------------------------
+\subsection{Zu Aufgabe 6}
+% ----------------------------------------------------------------------------
+\begin{lstlisting}
+if __name__ == '__main__':
+     # Aufgabe 6 
+     pt = "strenggeheim"
+     k1 = "db"
+     ct = "IFFYVQMJYFFDQ"
+     k2 = "pi"
+ 
+     k1_1, k1_2 = decode(k1)
+     k2_1, k2_2 = decode(k2)
+ 
+     ptoc = acEncrypt(k1_1, k1_2, pt)
+     ctop = acDecrypt(k2_1, k2_2, ct)
+ 
+     print("Aufgabe 6:")
+     print(ptoc)
+     print(ctop)
+\end{lstlisting}
+\begin{lstlisting}
+Aufgabe 6:
+DGANOTTNWNZL
+affinechiffre
+\end{lstlisting}
+
+%
+ ----------------------------------------------------------------------------
+\subsection{Zu Aufgabe 7}
+% ----------------------------------------------------------------------------
+Datei wurde entsprechend benannt.
+
+%
+ ----------------------------------------------------------------------------
+\subsection{Zu Aufgabe 8}
+% ----------------------------------------------------------------------------
+
 \end{document}
 
 %%% Local Variables: 

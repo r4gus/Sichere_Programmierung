@@ -66,7 +66,7 @@ alph_to_num = {k:v for v , k in enumerate(string.ascii_lowercase)}
 
 
 % ----------------------------------------------------------------------------
-\subsection{Zu Aufgabe 2}
+\section{Zu Aufgabe 2}
 % ----------------------------------------------------------------------------
 Die Funktion \texttt{encode(text)} stellt die Umkehrfunktion von \texttt{decode()} dar, für alle $w \in \{a,..z\}^{*}$. Sie nimmt als Eingabe eine Liste von Zahlen $a \in \mathbb{Z}_{26}$ und gibt eine entsprechende Zeichenkette (String) zurück.
 
@@ -84,7 +84,7 @@ Dadurch, dass \texttt{decode()} und \texttt{encode()} jeweils Funktion und Umkeh
 
 
 % ----------------------------------------------------------------------------
-\subsection{Zu Aufgabe 3}
+\section{Zu Aufgabe 3}
 % ----------------------------------------------------------------------------
 Um das gewünschte Dictionary \texttt{key\_table} zu erstellen, haben wir die gleichnamige Funktion \texttt{key\_table(m: int)} implementiert. Diese ermöglicht es nicht nur \texttt{key\_table} für $\mathbb{Z}_{26}$, sondern allgemein für $\mathbb{Z}_{m},  m \geq 2$ anzulegen. Dabei wird mithilfe einer For-Loop über alle $ a \in \{1,2,..,m-1\}$ iteriert und deren multiplikativ Inverses, mithilfe von \texttt{mcrypt.mul\_inverse(n, m)}, berechnet. Falls ein mult. Inverses existiert wird dieses dann nach dem Schema \texttt{$a:a^{-1}$} dem Dictionary hinzugefügt. Sollte $m < 2$ oder ein invalider Datentyp übergeben werden, wird \texttt{None} zurückgegeben. Andernfalls gibt die Funktion das erstellte Dictionary zurück. 
 \begin{lstlisting}
@@ -95,7 +95,7 @@ for i in range(m):
          d[i] = i_neg		# Es gibt ein mult. Inv. -> add to dict
 \end{lstlisting}
 
-\subsubsection{Berechnung des multiplikativ Inversen}
+\subsection{Berechnung des multiplikativ Inversen}
 Zur Berechnung des multiplikativ Inversen wird die Funktion \texttt{mul\_inverse(n: int, m: int)} genutzt, die auf dem erweiterten Euklid'schen Algorithmus beruht. Grundsätzlich gilt, wenn es zu $n \in Z_{m}$ eine Zahl $x \in \mathbb{Z}_{m}$ gibt mit $n * x = 1 (mod \, m)$, so wird $x$ als multiplikativ Inverses zu n in m bezeichnet, schreibe $n^{-1}$ oder $\frac{1}{n}$.
 
 Die Definition des multiplikativ Inversen bedeutet jedoch, dass sich $n * x$ und $1$ um ein Vielfaches von $m$ unterscheiden, d.h. $n*x + m*y = 1$. Für Gleichungen dieser Art kann nun x und y mithilfe des erweiterten Euklid bestimmt werden.
@@ -130,7 +130,7 @@ return (x + module) % module
 
 %
  ----------------------------------------------------------------------------
-\subsection{Zu Aufgabe 4}
+\section{Zu Aufgabe 4}
 % ----------------------------------------------------------------------------
 \texttt{acEncrypt(a, b, text)} nutzt zuerst \texttt{decode()} um mithilfe des gegebenen Textes eine entsprechende Liste von Ganzzahlen zu erzeugen. 
 \begin{lstlisting}
@@ -154,7 +154,7 @@ Damit Einträge des Levels Info angezeigt werden, muss das jeweilige Script mit 
 
 %
  ----------------------------------------------------------------------------
-\subsection{Zu Aufgabe 5}
+\section{Zu Aufgabe 5}
 % ----------------------------------------------------------------------------
 Die Fehlerprüfung von \texttt{acDecrypt()} ist identisch zu der von \texttt{acEncrypt}. 
 
@@ -175,7 +175,7 @@ return encode([ ((y - b) * table[a]) % modulo for y in decode(cipher_text) ])
 
 %
  ----------------------------------------------------------------------------
-\subsection{Zu Aufgabe 6}
+\section{Zu Aufgabe 6}
 % ----------------------------------------------------------------------------
 \begin{lstlisting}
 if __name__ == '__main__':
@@ -203,14 +203,141 @@ affinechiffre
 
 %
  ----------------------------------------------------------------------------
-\subsection{Zu Aufgabe 7}
+\section{Zu Aufgabe 7}
 % ----------------------------------------------------------------------------
 Datei wurde entsprechend benannt.
 
 %
  ----------------------------------------------------------------------------
-\subsection{Zu Aufgabe 8}
+\section{Zu Aufgabe 8}
 % ----------------------------------------------------------------------------
+Das \texttt{affinecipher.py} Skript besteht aus zwei Teilen, der \texttt{crypt(path: str, key: str, fun)} Funktion sowie einem \texttt{\_\_main\_\_} Part, der nur ausgeführt wird, wenn man die Datei auch wirklich als Skript und nicht etwa als Modul nutzt.
+
+\subsection{crypt()}
+Die \texttt{crpyt()} Funktion hat drei Parameter, namentlich path, key und fun. Ihr wird der Pfad der zu ver- bzw. entschlüsselnden Datei als String, ein Schlüsselpaar ebenfalls als String, sowie entweder die Ver- oder Entschlüsselungsfunktion übergeben. Danach wird das Schlüsselpaar, mithilfe von \texttt{decode()}, in seine numerische Repräsentation umgewandelt. Schlussendlich wird die übergebene Funktion mit dem Schlüsselpaar sowie dem Inhalt der Datei als Argumente aufgerufen. Und der Rückgabewert auf der Kommandozeile ausgegeben.
+\begin{lstlisting}
+def crypt(path: str, key: str, fun) -> None:
+    k1, k2 = decode(key)
+
+    with open(path, "r") as f:
+        print(fun(k1, k2, f.read()))
+
+\end{lstlisting}
+Dadurch, dass die \texttt{acEncrypt()} und \texttt{acDecrypt()} Funktionen dieselben Schnittstellen besitzen, kann hier auf eine Funktion zurückgegriffen werden, der die jeweils passende Ver- oder Entschlüsselungsfunktion übergeben wird. Dies spart etwas Code und vermeidet Redundanzen.
+
+\subsection{\_\_main\_\_}
+Hier steht der Großteil des Codes. 
+
+\subsubsection{Kommand Line Arguments}
+Um an die jeweiligen Kommandozeilenargumente zu kommen, haben wir das \texttt{argparse} Modul importiert.
+\begin{lstlisting}
+import argparse
+\end{lstlisting}
+Mit dem folgenden Methodenaufruf kann dann ein \texttt{ArgumentParser} erzeugt werden, dem außerdem eine Beschreibung des Skripts als String übergeben werden kann.
+\begin{lstlisting}
+parser = argparse.ArgumentParser(description="Encrypt or decrypt \\
+a file using the affine cipher")
+\end{lstlisting}
+Danach können dem erzeugten Parser-Objekt zu erwartende Argumente hinzugefügt werden. Es ist dabei möglich, Neben einem aussagekräftigen Namen, auch erwartete Werte sowie ein Hilfetext als Argumente zu übergeben.
+\begin{lstlisting}
+parser.add_argument("mode", choices=["e", "d"], help="[e]ncrypt or \\
+[d]ecrpyt the file")
+parser.add_argument("key", help="String with exactly two lower \\
+case ascii letters")
+parser.add_argument("path", help="File path")
+\end{lstlisting}
+Mit dem Methodenaufruf \texttt{parse\_args()} kann dann ein Objekt erzeugt werden, mit dem auf die Kommandozeilenargumente, wie auf normal Instanz-Attribute, zugegriffen werden kann.
+\begin{lstlisting}
+args = parser.parse_args()
+
+mode = args.mode
+key = args.key
+path = args.path
+\end{lstlisting}
+Der Vorteil von \texttt{argparse} gegenüber dem direkten aufrufen von \texttt{sys.argv} ist, dass auf einfache Weise nutzerfreundliche Kommandozeilenschnittstellen geschaffen werden können. Übergibt der Nutzer z.B. falsche Argumente, so wird ihm direkt der passende Hilfstext mit Nutzungsinformationen angezeigt.
+
+Mit den obigen Statements erzeugt uns \texttt{parseargs} beim aufrufen des Skriptes mit 
+
+\texttt{\$./affinecipher.py -h} folgenden Output:
+\begin{lstlisting}
+usage: affinecipher.py [-h] {e,d} key path
+
+Encrypt or decrypt a file using the affine cipher
+
+positional arguments:
+  {e,d}       [e]ncrypt or [d]ecrpyt the file
+  key         String with exactly two lower case ascii letters
+  path        File path
+
+optional arguments:
+  -h, --help  show this help message and exit
+\end{lstlisting}
+
+\subsubsection{Aufruf von crypt()}
+Je nach Betriebsmodus wird nach dem parsen der Argumente \texttt{crypt()} entweder mit der \texttt{acEncrypt()} oder der \texttt{acDecrypt()} aufgerufen, die sich wie oben beschrieben verhält.
+
+\subsection{Inbetriebnahme}
+Um das Skript wie ein normal Programm ausführen zu können, muss dieses wissen welchen Interpreter es für die nachfolgenden Zeilen verwenden soll. Um dies festzulegen wird der sog. \texttt{shebang ( \#! )} genutzt, gefolgt von dem absoluten Pfad des zu verwendenden Interpreters.
+
+\begin{lstlisting}
+#! /usr/bin/python3
+\end{lstlisting}
+Diese Zeile sagt aus, dass die Nachfolgenden Zeilen mithilfe des \texttt{python3} Interpreters ausgeführt werden sollen.
+
+Danach müssen dem Skript außerdem noch Ausführungsrechte (eng. execute permission) hinzugefügt werden. Dies geschieht über die Kommandozeile mit:
+\begin{lstlisting}
+$ chmod +x affinecipher.py
+\end{lstlisting}
+Alternativ kann statt \texttt{+x} auch der entsprechende Oktalwert genutzt werden.
+
+Mit \texttt{ls -l} lässt sich dann ggf. noch überprüfen ob der vorherige Befehl richtig ausgeführt wurde.
+\begin{lstlisting}
+$ ls -l
+...
+-rwxr-xr-x 1 sugar sugar  864 Okt 23 15:38 affinecipher.py
+...
+\end{lstlisting}
+Die Ziffern ganz links sagen uns, dass die Datei \texttt{affinecipher.py} user, group und other Ausführungsrechte (genau in dieser Reihenfolge beschrieben) hat.
+
+Mit den wenigen hier beschriebenen Zeilen Code und unter Verwendung der Module \texttt{argparse} und \texttt{aclib} kann das in Aufgabe 8 geforderte Command Line Tool bereitgestellt werden, das Affine Chiffren nutzt um gewünschte Texte zu ver- oder entschlüsseln.
+
+\begin{lstlisting}
+#! /usr/bin/python3
+
+import sys 
+import argparse
+
+from aclib import decode, acDecrypt, acEncrypt
+
+
+def crypt(path: str, key: str, fun) -> None:
+    """ 
+    Encodes/ Decodes the file pointed to by 'path'
+    using the specified function 'fun'.
+    """
+    k1, k2 = decode(key)
+
+    with open(path, "r") as f:
+        print(fun(k1, k2, f.read()))
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Encrypt or...")
+    parser.add_argument("mode", choices=["e", "d"], help="[e]...")
+    parser.add_argument("key", help="String with exactly two...")
+    parser.add_argument("path", help="File path")
+    args = parser.parse_args()
+
+    mode = args.mode
+    key = args.key
+    path = args.path
+    
+    if mode == "e":
+        crypt(path, key, acEncrypt)
+    elif mode == "d":
+        crypt(path, key, acDecrypt)
+
+\end{lstlisting}
 
 \end{document}
 

@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+from string import ascii_lowercase
 
 from aclib import decode, acDecrypt, acEncrypt
 
@@ -12,9 +13,14 @@ def crypt(path: str, key: str, fun) -> None:
     using the specified function 'fun'.
     """
     k1, k2 = decode(key)
-
-    with open(path, "r") as f:
-        print(fun(k1, k2, f.read()))
+    
+    try:
+        with open(path, "r") as f:
+            print(fun(k1, k2, f.read()))
+    except FileNotFoundError:
+        print(  "usage: affinecipher.py [-h] {e,d} key path\n" +
+                "error: The specified file could not be opened! Please ensure, that\n" + 
+                "       you've provided the right path and that the file does exist.")
 
 
 if __name__ == "__main__":
@@ -27,9 +33,13 @@ if __name__ == "__main__":
     mode = args.mode
     key = args.key
     path = args.path
-    
-    if mode == "e":
-        crypt(path, key, acEncrypt)
-    elif mode == "d":
-        crypt(path, key, acDecrypt)
+
+    if len(key) != 2 or not key[0] in ascii_lowercase or not key[1] in ascii_lowercase:
+        print(  "usage: " + sys.argv[0] +  "[-h] {e,d} key path\n" +
+                "error: Invalid key pair. Use '-h' for help.")
+    else:
+        if mode == "e":
+            crypt(path, key, acEncrypt)
+        elif mode == "d":
+            crypt(path, key, acDecrypt)
 

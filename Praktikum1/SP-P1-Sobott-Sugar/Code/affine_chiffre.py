@@ -1,4 +1,5 @@
 import string
+from mcrypt import gcd, key_table
 
 alph_to_num = {k:v for v , k in enumerate(string.ascii_lowercase)}
 num_to_alph = {v:k for v , k in enumerate(string.ascii_lowercase)}
@@ -41,9 +42,36 @@ def encode(int_list):
     except KeyError:
         raise AttributeError("Integer elements must be between 0 and 25.") 
 
+def acEncrypt(a, b, plain_text):
+    """
+    Encrypt the specified plain_text using the affine cipher.
+
+        y = (a*x +b)
+
+    returns:    The cipher text on success,
+                an empty string otherwise.
+    """
+    modulo = 26
+    cipher_text = ""
+
+    if not isinstance(a, int) or not isinstance(b, int) or not isinstance(plain_text, str):
+        print("[!!]: Invalid arguments. Must be: gcd(int, int, str)")
+        return ""
+
+    if gcd(a, modulo) != 1:
+        print("[!!]: Invalid key 'a'. 'a' must be relatively prime to 26.")
+        return ""
+    
+    t = decode(plain_text)
+ 
+    for i in range(len(t)):
+        t[i] = (a * t[i] + b) % modulo
+    
+    e = encode(t)
+    return e.upper()
+
+
+
 
 if __name__ == '__main__':
-    ds = decode("Hallo Welt!")
-    print(ds)
-    es = encode(ds + [33])
-    print(es)
+    print(acEncrypt(11, 23, "botschaft"))

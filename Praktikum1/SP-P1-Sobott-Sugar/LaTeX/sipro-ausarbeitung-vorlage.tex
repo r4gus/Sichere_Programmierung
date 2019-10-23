@@ -1,0 +1,93 @@
+\documentclass[12pt]{article}
+\parindent0em
+\parskip 1ex plus 0.4ex minus 0.4ex
+
+\usepackage[a4paper,vmargin=30mm,hmargin=25mm]{geometry}
+\usepackage{polyglossia}
+\setdefaultlanguage{german}
+\usepackage{fontspec}
+\usepackage{lipsum}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{amssymb}
+
+\definecolor{lstbackground}{rgb}{0.95,0.95,1}      % hellgruener Rahmen
+\lstset{language=Python}
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  backgroundcolor=\color{lstbackground},
+  keywordstyle=\bfseries\ttfamily\color{blue},
+  stringstyle=\color{orange!50!black}\ttfamily,
+  commentstyle=\color{gray}\ttfamily,
+  showstringspaces=false,
+  flexiblecolumns=false,
+  tabsize=4,
+  numbers=left,
+  numberstyle=\tiny,
+  numberblanklines=true,
+  stepnumber=1,
+  numbersep=10pt,
+  xleftmargin=15pt,
+  literate=%
+  {Ö}{{\"O}}1
+  {Ä}{{\"A}}1
+  {Ü}{{\"U}}1
+  {ß}{{\ss}}1
+  {ü}{{\"u}}1
+  {ä}{{\"a}}1
+  {ö}{{\"o}}1
+  {~}{{\textasciitilde}}1
+}
+
+\begin{document}
+
+\begin{center}
+  \textbf{\LARGE Sichere Programmierung} \\[1ex]%
+  \textbf{\Large Projekt 1}\\[2ex] %
+  Julian Sobott \\ %
+  (76511) \\ %
+  David Sugar \\ %
+  (76050) \\ %
+  
+\end{center}
+
+% ****************************************************************************
+\section{Zu Aufgabe 1}
+% ****************************************************************************
+Aus der Aufgabenstellung war gegeben, dass die Funktion \texttt{decode(text)}, die Buchstaben des übergebenen Textes in entsprechende Zahlen aus $\mathbb{Z}_{26}$ umwandeln und diese dann in einer Liste zurückgeben soll. Daraus ergibt sich der Definitionsbereich $D = \{a,...,z\}$ und Wertebereich $W = \{0,...,25\}$ mit $f: D \to W$ für die Symbole und $decode(): D^{*} \to W^{*}$ für Wörter beliebiger Länge.  
+
+$f: D \to W$ wird durch \texttt{alph\_to\_num} realisiert, einem Python \texttt{dict}, dass von ascii Kleinbuchstaben aufsteigend auf die Zahlen von Null bis 25 abbildet und wiederum innerhalb von \texttt{decode()} in einer Schleife verwendet wird um jeden einzelnen Buchstaben des übergebenen Textes umzuwandeln. Werte außerhalb des Definitionsbereiches werden vom gegebenen Algorithmus ignoriert.
+\begin{lstlisting}
+alph_to_num = {k:v for v , k in enumerate(string.ascii_lowercase)}
+\end{lstlisting}
+
+
+
+
+% ----------------------------------------------------------------------------
+\subsection{Zu Aufgabe 2}
+% ----------------------------------------------------------------------------
+Die Funktion \texttt{encode(text)} stellt die Umkehrfunktion von \texttt{decode()} dar, für alle $w \in \{a,..z\}^{*}$. Sie nimmt als Eingabe eine Liste von Zahlen $a \in \mathbb{Z}_{26}$ und gibt eine entsprechende Zeichenkette (String) zurück.
+
+Das Abbilden von Zahlen auf die entsprechenden Buchstaben wird durch $num\_to\_alph: \{0,..,25\} \to \{a,..,z\}$ realisiert.
+\begin{lstlisting}
+num_to_alph = {v:k for v , k in enumerate(string.ascii_lowercase)}
+\end{lstlisting}
+
+Um den String schlussendlich zu bauen benötigt es dann nur einen Einzeiler.
+\begin{lstlisting}
+"".join([ num_to_alph[d] for d in int_list ])
+\end{lstlisting}
+
+Dadurch, dass \texttt{decode()} und \texttt{encode()} jeweils Funktion und Umkehrfunktion darstellen ergibt sich: w = encode(decode(w)).
+
+\end{document}
+
+%%% Local Variables: 
+%%% TeX-PDF-mode: t
+%%% TeX-master: t
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-engine: xetex
+%%% End: 

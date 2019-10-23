@@ -1,10 +1,13 @@
 import string
+from typing import List, Dict
+
 from mcrypt import gcd, mul_inverse
+
 
 alph_to_num = {k:v for v , k in enumerate(string.ascii_lowercase)}
 num_to_alph = {v:k for v , k in enumerate(string.ascii_lowercase)}
 
-def decode(text: str):
+def decode(text: str) -> List[int]:
     """
     Takes a string as argument and converts every
     character to an corresponding integer, starting
@@ -24,7 +27,7 @@ def decode(text: str):
     
     return [ alph_to_num[c] for c in text if c in alph_to_num ]
 
-def encode(int_list):
+def encode(int_list: List[int]) -> str:
     """
     Takes a list of unsigned integers and converts every integer
     to an corresponding character, starting with a.
@@ -42,7 +45,7 @@ def encode(int_list):
     except KeyError:
         raise AttributeError("Integer elements must be between 0 and 25.") 
 
-def acEncrypt(a, b, plain_text):
+def acEncrypt(a: int, b: int, plain_text: str) -> str:
     """
     Encrypt the specified plain_text using the affine cipher.
 
@@ -71,7 +74,7 @@ def acEncrypt(a, b, plain_text):
     return e.upper()
 
 
-def acDecrypt(a, b, cipher_text):
+def acDecrypt(a: int, b: int, cipher_text: str) -> str:
     """
     Decrypt the specified cipher_text using the affine cipher.
 
@@ -98,7 +101,7 @@ def acDecrypt(a, b, cipher_text):
 
     return encode([ ((y - b) * table[a]) % modulo for y in decode(cipher_text) ])
 
-def key_table(m):
+def key_table(m: int) -> Dict[int, int]:
     """
     Returns a dictionary key table that contains
     all subkeys a e {0, 1, ..., m - 1} and their

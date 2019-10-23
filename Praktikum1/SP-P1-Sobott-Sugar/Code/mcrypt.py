@@ -38,34 +38,6 @@ def mul_inverse(n, m):
 
     return (x + module) % module
 
-def key_table(m):
-    """
-    Returns a dictionary key table that contains
-    all subkeys a e {0, 1, ..., m - 1} and their
-    corresponding multiplicative inverses.
-
-    For m >= 2
-
-    Returns:    dictionary key table on success,
-                None otherwise.
-    """
-    if not isinstance(m, int) or m < 2:
-        return None
-
-    d = dict()
-
-    for i in range(m):
-        i_neg = mul_inverse(i, m)
-
-        if i_neg != None:
-            d[i] = i_neg
-
-    return d
-
 
 if __name__ == '__main__':
-    m = 38
-    num = 75
-    
-    print("a^-1 of " + str(num) + " = " + str(mul_inverse(num, m)))
-    print(key_table(26))
+    pass

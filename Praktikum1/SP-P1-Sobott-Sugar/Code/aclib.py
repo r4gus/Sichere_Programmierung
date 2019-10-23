@@ -2,6 +2,7 @@ import string
 from typing import List, Dict
 
 from mcrypt import gcd, mul_inverse
+from logger import logger
 
 
 alph_to_num = {k:v for v , k in enumerate(string.ascii_lowercase)}
@@ -58,11 +59,11 @@ def acEncrypt(a: int, b: int, plain_text: str) -> str:
     cipher_text = ""
 
     if not isinstance(a, int) or not isinstance(b, int) or not isinstance(plain_text, str):
-        print("[!!]: Invalid arguments. Must be: gcd(int, int, str)")
+        logger.warning("[!!]: Invalid arguments. Must be: gcd(int, int, str)")
         return ""
 
     if gcd(a, modulo) != 1:
-        print("[!!]: Invalid key 'a'. 'a' must be relatively prime to 26.")
+        logger.info("[!!]: Invalid key 'a'. 'a' must be relatively prime to 26.")
         return ""
     
     t = decode(plain_text)
@@ -89,11 +90,11 @@ def acDecrypt(a: int, b: int, cipher_text: str) -> str:
     modulo = 26
 
     if not isinstance(a, int) or not isinstance(b, int) or not isinstance(cipher_text, str):
-        print("[!!]: Invalid arguments. Must be: gcd(int, int, str)")
+        logger.warning("[!!]: Invalid arguments. Must be: gcd(int, int, str)")
         return ""
 
     if gcd(a, modulo) != 1:
-        print("[!!]: Invalid key 'a'. 'a' must be relatively prime to 26.")
+        logger.info("[!!]: Invalid key 'a'. 'a' must be relatively prime to 26.")
         return ""
 
     a = a % modulo

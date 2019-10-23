@@ -51,26 +51,53 @@ def computeKeyPairs(char_list: List[int]) -> List[int]:
                 final.append((char, char2))
     return final
 
+def getPossibleTexts(cipher_text, char_pairs):
+    """
+
+    """
+    l = []
+    for cN, cE in char_pairs:
+        a = (3 * (cN - cE)) % 26
+        b = (cE - ( 4 * a )) % 26
+
+        pt = acDecrypt(a, b, cipher_text)
+        if pt != "":
+            l.append(pt)
+
+    return l
+
+
+def getMostPossibleTexts(texts: list) -> list:
+    """
+
+    """
+    word_list = make_word_list("commonEnglishWords.dic", 100)
+    text_ranking = []
+    for text in texts:
+        counter = 0
+        for word in word_list:
+            counter += text.count(word)
+        text_ranking.append((counter, text))
+    text_ranking.sort(reverse=True)
+    return text_ranking
+
 
 def analyzeCipherText(cipher_text, char_pairs):
     """
     
     """
-    for cN, cE in char_pairs:
-        a = (3 * (cN - cE)) % 26
-        b = (cE - ( 4 * a )) % 26
+    texts = getPossibleTexts(cipher_text, char_pairs)
+    sorted_texts = getMostPossibleTexts(texts)
+    print(("\n\n".join(tup[1][:50] for tup in sorted_texts)))
 
-        print(a, b)
 
-        pt = acDecrypt(a, b, cipher_text)
-        if pt != "":
-            print(pt[:50])
+   
+def make_word_list(path: str, n: int) -> List[str]:
+    with open(path, "r") as f:
+        return [word.strip().lower() for word in f.read().split("\n") if word.strip()][:n]
 
 
 
 
 if __name__ == "__main__":
-    table = computeFrequencyTable([1, 22, 3, 22])
-    printFrequencyTable(table)
-    print(computeMostFrequentChars(table, 2))
-    print(computeKeyPairs([13, 4, 19]))
+    print(make_word_list("commonEnglishWords.dic", 20))

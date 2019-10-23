@@ -4,7 +4,7 @@ from mcrypt import gcd, mul_inverse
 alph_to_num = {k:v for v , k in enumerate(string.ascii_lowercase)}
 num_to_alph = {v:k for v , k in enumerate(string.ascii_lowercase)}
 
-def decode(text):
+def decode(text: str):
     """
     Takes a string as argument and converts every
     character to an corresponding integer, starting

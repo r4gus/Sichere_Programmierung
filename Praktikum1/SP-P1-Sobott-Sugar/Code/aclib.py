@@ -1,5 +1,5 @@
 import string
-from mcrypt import gcd, key_table
+from mcrypt import gcd, mul_inverse
 
 alph_to_num = {k:v for v , k in enumerate(string.ascii_lowercase)}
 num_to_alph = {v:k for v , k in enumerate(string.ascii_lowercase)}
@@ -71,7 +71,73 @@ def acEncrypt(a, b, plain_text):
     return e.upper()
 
 
+def acDecrypt(a, b, cipher_text):
+    """
+    Decrypt the specified cipher_text using the affine cipher.
+
+       (y - b) * a⁻1 = x (mod 26)
+
+    Special characters are ignored.
+
+    returns:    The decrypted text on success (in lower)
+                an empty string otherwise
+
+    """
+    modulo = 26
+
+    if not isinstance(a, int) or not isinstance(b, int) or not isinstance(cipher_text, str):
+        print("[!!]: Invalid arguments. Must be: gcd(int, int, str)")
+        return ""
+
+    if gcd(a, modulo) != 1:
+        print("[!!]: Invalid key 'a'. 'a' must be relatively prime to 26.")
+        return ""
+
+    a = a % modulo
+    table = key_table(modulo)
+
+    return encode([ ((y - b) * table[a]) % modulo for y in decode(cipher_text) ])
+
+def key_table(m):
+    """
+    Returns a dictionary key table that contains
+    all subkeys a e {0, 1, ..., m - 1} and their
+    corresponding multiplicative inverses.
+
+    For m >= 2
+
+    Returns:    dictionary key table on success,
+                None otherwise.
+    """
+    if not isinstance(m, int) or m < 2:
+        return None
+
+    d = dict()
+
+    for i in range(m):
+        i_neg = mul_inverse(i, m)
+
+        if i_neg != None:
+            d[i] = i_neg
+
+    return d
+
+
 
 
 if __name__ == '__main__':
-    print(acEncrypt(11, 23, "botschaft"))
+    # Aufgabe 6 
+    pt = "strenggeheim"
+    k1 = "db"
+    ct = "IFFYVQMJYFFDQ"
+    k2 = "pi"
+
+    k1_1, k1_2 = decode(k1)
+    k2_1, k2_2 = decode(k2)
+    
+    ptoc = acEncrypt(k1_1, k1_2, pt)
+    ctop = acDecrypt(k2_1, k2_2, ct)
+    
+    print("Aufgabe 6:")
+    print(ptoc)
+    print(ctop)

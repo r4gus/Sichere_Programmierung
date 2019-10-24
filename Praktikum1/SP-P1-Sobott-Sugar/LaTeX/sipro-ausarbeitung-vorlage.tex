@@ -10,6 +10,7 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{amssymb}
+\usepackage{hyperref}
 
 \definecolor{lstbackground}{rgb}{0.95,0.95,1}      % hellgruener Rahmen
 \lstset{language=Python}
@@ -211,6 +212,7 @@ Datei wurde entsprechend benannt.
  ----------------------------------------------------------------------------
 \section{Zu Aufgabe 8}
 % ----------------------------------------------------------------------------
+\label{sec:aufgabe_8}
 Das \texttt{affinecipher.py} Skript besteht aus zwei Teilen, der \texttt{crypt(path: str, key: str, fun)} Funktion sowie einem \texttt{\_\_main\_\_} Part, der nur ausgeführt wird, wenn man die Datei auch wirklich als Skript und nicht etwa als Modul nutzt.
 
 \subsection{crypt()}
@@ -339,7 +341,61 @@ if __name__ == "__main__":
 
 \end{lstlisting}
 
+%
+ ----------------------------------------------------------------------------
+\section{Zu Aufgabe 9}
+% ----------------------------------------------------------------------------
+
+Um zu testen ob das in \hyperref[sec:aufgabe_8]{Aufgabe 8} beschriebene Skript funktioniert wird die Datei \texttt{klartext.txt} verschlüsselt. Zu beachten ist, dass der Pfad zu der Datei entweder relativ zum Skript oder absolut sein muss. In unserem fall ist der Pfad also: \texttt{../../klartext.txt}. Um mit key \texttt{pn} zu verschlüsseln, sieht der Aufruf also wie folgt aus:
+
+\begin{lstlisting}
+$ ./affinecipher.py e pn ../../klartext.txt
+\end{lstlisting}
+
+\begin{lstlisting}
+EJMOPADXMVDAVMPWWVEIPZINLLDVIXEINROV
+\end{lstlisting}
+
+%
+ ----------------------------------------------------------------------------
+\section{Zu Aufgabe 10}
+% ----------------------------------------------------------------------------
+
+Um die Datei \texttt{geheimtext.txt} zu entschlüsseln muss der Pfad entsprechend angepasst werden und der Modus in \texttt{d} geändert werden:
+
+\begin{lstlisting}
+$ ./affinecipher.py d pn ../../geheimtext.txt
+\end{lstlisting}
+
+\begin{lstlisting}
+diesisteinstrenggeheimergeheimtextbittevertraulichbehandeln
+\end{lstlisting}
+
+
+%
+ ----------------------------------------------------------------------------
+\section{Zu Aufgabe 11}
+% ----------------------------------------------------------------------------
+\label{sec:aufgabe_11}
+
+Die Funktion \texttt{computeFrequencyTable} bekommt eine Liste übergeben und erstellt ein dictionary mit den Häufigkeiten jedes Wertes. Die Werte die in der Liste stehen können beliebig sein. Im Programm enthält die Liste jedoch nur Werte aus $\mathbb{Z}_{26}$. Das heißt das Dictionary stellt die Funktion $f: \mathbb{Z}_{26} \to \mathbb{N}$ dar. Dafür wird über jedes Element in der Liste iteriert. Wenn es schon im dictionary ist, wird der Zähler um 1 hoch gezählt, sonst wird es mit Wert 1 hinzugefügt.
+
+% TODO: insert code?
+
+%
+ ----------------------------------------------------------------------------
+\section{Zu Aufgabe 12}
+% ----------------------------------------------------------------------------
+
+Die \texttt{printFrequencyTable} ist eine Hilfsfunktion, die die Häufigeiten jedes Buchstabens, formatiert in der Konsole ausgibt. Als Übergabeparameter erhält die Funktion ein Dictionary, wie es in \hyperref[sec:aufgabe_11]{Aufgabe 11} erstellt wurde. Für die Ausgabe ist nur eine Zeile an Code notwendig. Es wird über das Dictionary iteriert und jedes Element aus dem Dictionary wird ein Elemenmt in einer Liste. Dieses Elememt ist ein formatierter String, in dem auch die \texttt{encode} Funktion aufgerufen wird. Alle Listenelemente werden anschließend zu einem String zusammengefügt und durch ein '\textbackslash n' getrennt.
+
+\begin{lstlisting}
+print("\n".join([f"{encode([char])}: {freq}" for char, freq in table.items()]))
+\end{lstlisting}
+
 \end{document}
+
+
 
 %%% Local Variables: 
 %%% TeX-PDF-mode: t

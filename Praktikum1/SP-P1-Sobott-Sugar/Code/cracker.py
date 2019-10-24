@@ -50,6 +50,7 @@ def computeKeyPairs(char_list: List[int]) -> List[int]:
             if char != char2:
                 final.append((char, char2))
     return final
+    # return [(c1, c2) for c1 in char_list for c2 in char_list if c1 != c2]
 
 def getPossibleTexts(cipher_text, char_pairs):
     """

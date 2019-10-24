@@ -393,6 +393,60 @@ Die \texttt{printFrequencyTable} ist eine Hilfsfunktion, die die Häufigeiten je
 print("\n".join([f"{encode([char])}: {freq}" for char, freq in table.items()]))
 \end{lstlisting}
 
+%
+ ----------------------------------------------------------------------------
+\section{Zu Aufgabe 13}
+% ----------------------------------------------------------------------------
+
+Die Funktion \texttt{computeMostFrequentChars} soll die häufigsten Buchstaben als Liste zurückgeben. Als Eingabe wird ein dictionary wie es in \texttt{computeFrequencyTable} erstellt wird, übergeben. Da ein dictionary nicht sortiert werden kann, muss dies zuerst in eine Liste umgewandelt werden. Die Elemente sind Tupel aus key, value. Wichtig hierbei ist, dass die frequency (value) an erster Stelle im Tupel steht, da sie beim sortieren die höhere Priorität hat. Wie hier in dem Beispiel zu sehen, wenn aufsteigend sortiert wird.
+
+\begin{lstlisting}
+>>> sorted([(2, 1), (1, 3)])
+[(1, 3), (2, 1)]     
+\end{lstlisting}
+
+Anschließend muss die Liste in \textbf{reverse} sortiert werden, um die häufigsten Buchstaben am Anfang zu haben. Der zweite Paramter \texttt{n} gibt an wie viele Element die Liste haben soll. Hierfür mit hilfe von slicing die Liste auf die gewünschte Größe kopiert. Zum Schluss wird mit Hilfe von 'list comprehension' noch eine Liste erstellt, die nur noch dekodierten Buchstaben (keys im Dictionary) enthält.
+
+Obwohl der Algorithmus in einer Zeile Code möglich wäre haben wir uns im finalen Code für die ausfühliche Version entschieden. Dadurch istder Code besser lesbar und kann leichter erweitert werden. 
+
+Einzeiler:
+\begin{lstlisting}
+return [tup[1] for tup in sorted(
+	[(freq, char) for char, freq in freq_table.items()],
+	 reverse=True)[0:n]] 
+\end{lstlisting}
+
+Finaler Code:
+\begin{lstlisting}
+l = [(freq, char) for char, freq in freq_table.items()]
+l.sort(reverse=True)
+l_cut = l[0:n]
+final = [tup[1] for tup in l_cut]
+return final   
+\end{lstlisting}
+ 
+ 
+%
+ ----------------------------------------------------------------------------
+\section{Zu Aufgabe 14}
+% ----------------------------------------------------------------------------
+
+Die Funktion \texttt{computeKeyPairs} gibt eine Liste zurück die durch die Menge $L =\{(a,b) \vert a, b \in char_list \land a \neq b\}$ beschrieben wird. Hierfür muss in einer geschachtelten Schleife jeweils über die übergebene Liste iteriert werden und wenn die Elemente unterschiedlich sind, der neuen Liste angehängt werden.
+
+\begin{lstlisting}
+return [(c1, c2) for c1 in char_list for c2 in char_list if c1 != c2]
+\end{lstlisting}
+
+
+
+
+
+
+
+
+
+
+
 \end{document}
 
 

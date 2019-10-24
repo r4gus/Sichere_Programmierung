@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/Debian) (preloaded format=xelatex 2019.10.24)  24 OCT 2019 12:57
+This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/Debian) (preloaded format=xelatex 2019.10.24)  24 OCT 2019 22:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -873,20 +873,46 @@ Overfull \hbox (78.79008pt too wide) in paragraph at lines 393--394
 ][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][] 
  []
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 396.
+
+Overfull \hbox (30.21593pt too wide) in paragraph at lines 401--402
+\TU/lmr/m/n/12 Die Funktion \TU/lmtt/m/n/12 computeMostFrequentChars \TU/lmr/m/
+n/12 soll die häufigsten Buchstaben als Liste zurückgeben.
+ []
+
+
+Overfull \hbox (5.49193pt too wide) in paragraph at lines 401--402
+\TU/lmr/m/n/12 Als Eingabe wird ein dictionary wie es in \TU/lmtt/m/n/12 comput
+eFrequencyTable \TU/lmr/m/n/12 erstellt wird, übergeben.
+ []
+
 [8]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 396.
+Overfull \hbox (8.39621pt too wide) in paragraph at lines 434--435
+\TU/lmr/m/n/12 Die Funktion \TU/lmtt/m/n/12 computeKeyPairs \TU/lmr/m/n/12 gibt
+ eine Liste zurück die durch die Menge $\OML/cmm/m/it/12 L \OT1/cmr/m/n/12 = \O
+MS/cmsy/m/n/12 f\OT1/cmr/m/n/12 (\OML/cmm/m/it/12 a; b\OT1/cmr/m/n/12 )\OMS/cms
+y/m/n/12 j\OML/cmm/m/it/12 a; b \OMS/cmsy/m/n/12 2
+ []
+
+
+Overfull \hbox (13.08955pt too wide) in paragraph at lines 437--438
+[][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][][
+][][][][][][][][][] 
+ []
+
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 450.
+[9]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 450.
  (./sipro-ausarbeitung-vorlage.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 396.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 396.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 450.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 450.
  ) 
 Here is how much of TeX's memory you used:
- 21434 strings out of 494945
- 396550 string characters out of 6177496
+ 21443 strings out of 494945
+ 396639 string characters out of 6177496
  641812 words of memory out of 5000000
- 25152 multiletter control sequences out of 15000+600000
+ 25161 multiletter control sequences out of 15000+600000
  535389 words of font info for 55 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
  45i,6n,72p,10480b,1712s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on sipro-ausarbeitung-vorlage.pdf (8 pages).
+Output written on sipro-ausarbeitung-vorlage.pdf (9 pages).

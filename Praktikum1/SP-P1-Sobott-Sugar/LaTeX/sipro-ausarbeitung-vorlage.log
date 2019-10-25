@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/Debian) (preloaded format=xelatex 2019.10.24)  24 OCT 2019 22:05
+This is XeTeX, Version 3.14159265-2.6-0.99998 (TeX Live 2017/Debian) (preloaded format=xelatex 2019.10.24)  25 OCT 2019 09:06
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -899,20 +899,35 @@ Overfull \hbox (13.08955pt too wide) in paragraph at lines 437--438
 ][][][][][][][][][] 
  []
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 450.
+
+LaTeX Warning: Hyper reference `sec:aufgabe_14' on page 9 undefined on input li
+ne 445.
+
+
+Overfull \hbox (56.1439pt too wide) in paragraph at lines 445--446
+\TU/lmr/m/n/12 Der Funktion \TU/lmtt/m/n/12 analyzeCipherText \TU/lmr/m/n/12 wi
+rd ein verschlüsselter Text und eine Liste von Buchstabenpaaren
+ []
+
 [9]
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 450.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 466.
+ [10]
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 466.
  (./sipro-ausarbeitung-vorlage.aux)
-Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 450.
-Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 450.
+Package atveryend Info: Empty hook `AtVeryEndDocument' on input line 466.
+Package atveryend Info: Empty hook `AtEndAfterFileList' on input line 466.
+
+
+LaTeX Warning: There were undefined references.
+
  ) 
 Here is how much of TeX's memory you used:
- 21443 strings out of 494945
- 396639 string characters out of 6177496
+ 21445 strings out of 494945
+ 396667 string characters out of 6177496
  641812 words of memory out of 5000000
- 25161 multiletter control sequences out of 15000+600000
+ 25163 multiletter control sequences out of 15000+600000
  535389 words of font info for 55 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 45i,6n,72p,10480b,1712s stack positions out of 5000i,500n,10000p,200000b,80000s
+ 45i,7n,72p,10480b,1712s stack positions out of 5000i,500n,10000p,200000b,80000s
 
-Output written on sipro-ausarbeitung-vorlage.pdf (9 pages).
+Output written on sipro-ausarbeitung-vorlage.pdf (10 pages).

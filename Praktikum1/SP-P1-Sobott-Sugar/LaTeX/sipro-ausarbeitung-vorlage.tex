@@ -431,20 +431,41 @@ return final
 \section{Zu Aufgabe 14}
 % ----------------------------------------------------------------------------
 
-Die Funktion \texttt{computeKeyPairs} gibt eine Liste zurück die durch die Menge $L =\{(a,b) \vert a, b \in char_list \land a \neq b\}$ beschrieben wird. Hierfür muss in einer geschachtelten Schleife jeweils über die übergebene Liste iteriert werden und wenn die Elemente unterschiedlich sind, der neuen Liste angehängt werden.
+Die Funktion \texttt{computeKeyPairs} gibt eine Liste zurück die durch die Menge $L =\{(a,b) \vert a, b \in char\_list \land a \neq b\}$ beschrieben wird. Hierfür muss in einer geschachtelten Schleife jeweils über die übergebene Liste iteriert werden und wenn die Elemente unterschiedlich sind, der neuen Liste angehängt werden.
 
 \begin{lstlisting}
 return [(c1, c2) for c1 in char_list for c2 in char_list if c1 != c2]
 \end{lstlisting}
 
+%
+ ----------------------------------------------------------------------------
+\section{Zu Aufgabe 15}
+% ----------------------------------------------------------------------------
 
+Der Funktion \texttt{analyzeCipherText} wird ein verschlüsselter Text und eine Liste von Buchstabenpaaren aus \hyperref[sec:aufgabe_14]{Aufgabe 14 } übergeben. Das Ziel ist nun aus den Buchstabenpaaren, Schlüsselpaare zu berechnen und damit den Geheimtext entschlüsseln.
 
+\subsection{Berechnung des Schlüssels}
 
+Verschlüsseln eines Textes:
+$y \equiv ax + b \pmod{26}$
 
+Wird nun eine Tabelle mit den häufigsten Buchstaben in deutschen Texten stellt man fest, dass \textbf{E} und \textbf{N} die häfigsten Buchstaben sind. setzt man nun ihre dekodierten Zahlenwerte in die Formel ein erhält man.
 
+$
+\begin{array}{lcl} 
+C_E & \equiv & a \cdot 4 + b \pmod{26}\\
+C_N & \equiv & a \cdot 13 + b \pmod{26} \end{array}
+$
 
+Stellt man dieses Gleichungssystem nach \texttt{a} und \texttt{b} um, um die Schlüssel zu erhalten, erhält man:
 
+$
+\begin{array}{lcl} 
+a & \equiv & 3 \cdot (C_N - C_E) \pmod{26}\\
+b & \equiv & C_E - 4 \cdot a \pmod{26} \end{array}
+$
 
+\textbf{C_N} und \textbf{C_E} sind dann die Buchstabenpaare die zuvor berechnet wurden. 
 
 
 \end{document}

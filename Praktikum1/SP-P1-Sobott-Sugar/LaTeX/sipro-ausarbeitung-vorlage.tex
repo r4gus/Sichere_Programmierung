@@ -157,6 +157,7 @@ Damit Einträge des Levels Info angezeigt werden, muss das jeweilige Script mit 
  ----------------------------------------------------------------------------
 \section{Zu Aufgabe 5}
 % ----------------------------------------------------------------------------
+\label{sec:aufgabe_5}
 Die Fehlerprüfung von \texttt{acDecrypt()} ist identisch zu der von \texttt{acEncrypt}. 
 
 Nachdem auf Fehler geprüft wurde, wird als erstes dafür gesorgt, dass der Teilschlüssel a in $\mathbb{Z}_{26}$ liegt. Dadurch wird sichergestellt, das bei einem späteren Hash-Table lookup auch an der richtigen Stelle 'gesucht' wird.
@@ -405,9 +406,11 @@ Die Funktion \texttt{computeMostFrequentChars} soll die häufigsten Buchstaben a
 [(1, 3), (2, 1)]     
 \end{lstlisting}
 
-Anschließend muss die Liste in \textbf{reverse} sortiert werden, um die häufigsten Buchstaben am Anfang zu haben. Der zweite Paramter \texttt{n} gibt an wie viele Element die Liste haben soll. Hierfür mit hilfe von slicing die Liste auf die gewünschte Größe kopiert. Zum Schluss wird mit Hilfe von 'list comprehension' noch eine Liste erstellt, die nur noch dekodierten Buchstaben (keys im Dictionary) enthält.
+Anschließend muss die Liste in \textbf{reverse} sortiert werden, um die häufigsten Buchstaben am Anfang zu haben. Der zweite Paramter \texttt{n} gibt an wie viele Element die Liste haben soll. Desto größer \texttt{n} gewählt wird, desto länger braucht später das Knacken eines Textes, da mehr Möglichkeiten durchprobiert werden. Es kann aber passieren, dass wenn \texttt{n} zu klein gewählt wird, die richtige Buchstabenkombination gar nicht dabei ist. Dies ist vorallem der Fall wenn der Text in einer Sprache ist. 
 
-Obwohl der Algorithmus in einer Zeile Code möglich wäre haben wir uns im finalen Code für die ausfühliche Version entschieden. Dadurch istder Code besser lesbar und kann leichter erweitert werden. 
+Die Liste wird mithilfe von 'slicing' auf die Größe \texttt{n} kopiert. Zum Schluss wird mit Hilfe von 'list comprehension' noch eine Liste erstellt, die nur noch dekodierte Buchstaben (keys im Dictionary) enthält.
+
+Obwohl der Algorithmus in einer Zeile Code möglich wäre haben wir uns im finalen Code für die ausfühliche Version entschieden. Dadurch ist der Code besser lesbar und kann leichter erweitert werden. 
 
 Einzeiler:
 \begin{lstlisting}
@@ -445,7 +448,7 @@ return [(c1, c2) for c1 in char_list for c2 in char_list if c1 != c2]
 Der Funktion \texttt{analyzeCipherText} wird ein verschlüsselter Text und eine Liste von Buchstabenpaaren aus \hyperref[sec:aufgabe_14]{Aufgabe 14 } übergeben. Das Ziel ist nun aus den Buchstabenpaaren, Schlüsselpaare zu berechnen und damit den Geheimtext entschlüsseln.
 
 \subsection{Berechnung des Schlüssels}
-
+\label{subsec:aufgabe_15_1}
 Verschlüsseln eines Textes:
 $y \equiv ax + b \pmod{26}$
 
@@ -465,7 +468,34 @@ a & \equiv & 3 \cdot (C_N - C_E) \pmod{26}\\
 b & \equiv & C_E - 4 \cdot a \pmod{26} \end{array}
 $
 
-\textbf{C_N} und \textbf{C_E} sind dann die Buchstabenpaare die zuvor berechnet wurden. 
+$C_N$ und $C_E$ sind dann die Buchstabenpaare die zuvor berechnet wurden. 
+
+\subsection{Mögliche Texte berechnen}
+\label{subsec:aufgabe_15_2}
+Einer neuen Funktion \texttt{getPossibleTexts}, wird der Geheimtext und die Buchstabenpaare übergeben. Die Funktion iteriert über alle Buchstabenpaare und berechnet mit den Gleichungen aus \hyperref[subsec:aufgabe_15_1]{15.1} die Schlüssel \texttt{a}, \texttt{b}. Diese werden der Funktion \texttt{acDecrypt} aus \hyperref[sec:aufgabe_5]{Aufgabe 5} übergeben. Wenn diese einen Leeren String zurückgibt es also keine inversen gab, passiert nichts. Ansonsten wird der zurückgegebene Text an eine Liste angehängt. Diese Liste wird am Ende zurückgegeben.
+
+\subsection{Wahrscheinlichste Texte berechnen}
+
+Gibt man die Texte aus \hyperref[subsec:aufgabe_15_2]{15.2} in der Konsole aus, muss man jeden Text überfliegen, bis der richtige kommt. Um dies zu vereinfachen gibt es noch eine Funktion \texttt{getMostPossibleTexts}. Dieser wird die Liste mit allen Texten übergeben. Es wird für jeden Text ausgerechnet wie viele Wörter er einer Sprache enthält. Desto mehr Wörter er entält, desto besser wird er geranked. Als Wörterliste haben wir eine Liste aus dem Internet mit den 100 häufigsten Englischen Wörtern kopiert. Die Liste die dann aus Tupeln (Häfigkeit, Text) besteht, dann wieder sortiert werden und zurückgegeben werden. Diese Funktion ist die Erweiterung von Buchstaben, wie sie zuvor verwendet wurden, auf Wörter.
+
+\subsection{Texte ausgeben}
+
+Um die sortierten Texte nun Auszugeben werden sie jeweils noch auf eine bestimmte Länge gekürzt und dann nacheinander ausgegeben.
+\begin{lstlisting}
+print(("\n\n".join(tup[1][:50] for tup in sorted_texts)))
+\end{lstlisting}
+
+%----------------------------------------------------------------------------
+\section{Zu Aufgabe 16}
+% ----------------------------------------------------------------------------
+
+Das Skript \texttt{affinebreaker.py} parsed wieder mit der \texttt{argparse} Bibliothek alle Argumente. Benötigt wird hier nur der Pfad zur Datei die geknackt werden soll. Zusätzlich kann man die optionale Flag \texttt{-v} (verbose) angeben um sich alle Fehlermeldungen anzeigen zu lassen. In dem Skript wird die angegebene Datei geöffnet und gelesen. Jetzt werden die zuvor erstellten Funktionen aufgerufen um am Ende eine Ausgabe aller möglichen Texte zu erhalten. Mit der wahrscheinlichsten Lösung als erstes.
+
+%----------------------------------------------------------------------------
+\section{Mögliche Verbesserungen}
+% ----------------------------------------------------------------------------
+
+Um das knacken für mehr Sprachen zu unterstützen, könnten mehr Wörterbücher und andere Buchstabenwahrscheinlichkeiten verwendet werden.
 
 
 \end{document}

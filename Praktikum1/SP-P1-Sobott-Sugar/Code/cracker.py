@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Tuple
 
 from aclib import encode, acDecrypt
 
@@ -39,7 +39,7 @@ def computeMostFrequentChars(freq_table: Dict[int, int], n: int) -> List[int]:
     # return [tup[1] for tup in sorted([(freq, char) for char, freq in freq_table.items()], reverse=True)[0:n]]
     
 
-def computeKeyPairs(char_list: List[int]) -> List[int]:
+def computeKeyPairs(char_list: List[int]) -> List[Tuple[int, int]]:
     """
     L = {(a,b) | a, b e List ^ a != b}
 
@@ -52,9 +52,9 @@ def computeKeyPairs(char_list: List[int]) -> List[int]:
     return final
     # return [(c1, c2) for c1 in char_list for c2 in char_list if c1 != c2]
 
-def getPossibleTexts(cipher_text, char_pairs):
+def getPossibleTexts(cipher_text: str, char_pairs: List[Tuple[int, int]]) -> List[str]:
     """
-
+    Creates a list with all possible decrypted texts.
     """
     l = []
     for cN, cE in char_pairs:
@@ -68,9 +68,11 @@ def getPossibleTexts(cipher_text, char_pairs):
     return l
 
 
-def getMostPossibleTexts(texts: list) -> list:
+def getMostPossibleTexts(texts: List[str]) -> List[Tuple[int, str]]:
     """
-
+    Ranks the texts based on how many correct words they contain.
+    returns: A list of tuples with the score and the text. 
+             The higher the score the more possible is the text.
     """
     word_list = make_word_list("commonEnglishWords.dic", 100)
     text_ranking = []
@@ -83,9 +85,9 @@ def getMostPossibleTexts(texts: list) -> list:
     return text_ranking
 
 
-def analyzeCipherText(cipher_text, char_pairs):
+def analyzeCipherText(cipher_text: str, char_pairs: List[Tuple[int, int]]) -> None:
     """
-    
+    Analizes the text and print possible decrypted texts.
     """
     texts = getPossibleTexts(cipher_text, char_pairs)
     sorted_texts = getMostPossibleTexts(texts)
@@ -94,6 +96,9 @@ def analyzeCipherText(cipher_text, char_pairs):
 
    
 def make_word_list(path: str, n: int) -> List[str]:
+    """
+    Read in a dictionary file and create a list with every word inside.
+    """
     with open(path, "r") as f:
         return [word.strip().lower() for word in f.read().split("\n") if word.strip()][:n]
 

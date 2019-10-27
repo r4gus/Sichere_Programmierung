@@ -58,7 +58,7 @@
 % ****************************************************************************
 Aus der Aufgabenstellung war gegeben, dass die Funktion \texttt{decode(text)}, die Buchstaben des übergebenen Textes in entsprechende Zahlen aus $\mathbb{Z}_{26}$ umwandeln und diese dann in einer Liste zurückgeben soll. Daraus ergibt sich der Definitionsbereich $D = \{a,...,z\}$ und Wertebereich $W = \{0,...,25\}$ mit $f: D \to W$ für die Symbole und $decode(): D^{*} \to W^{*}$ für Wörter beliebiger Länge.  
 
-$f: D \to W$ wird durch \texttt{alph\_to\_num} realisiert, einem Python \texttt{dict}, dass von ascii Kleinbuchstaben aufsteigend auf die Zahlen von Null bis 25 abbildet und wiederum innerhalb von \texttt{decode()} in einer Schleife verwendet wird um jeden einzelnen Buchstaben des übergebenen Textes umzuwandeln. Werte außerhalb des Definitionsbereiches werden vom gegebenen Algorithmus ignoriert.
+$f: D \to W$ wird durch \texttt{alph\_to\_num} realisiert, einem Python \texttt{dict}, dass von ascii Kleinbuchstaben aufsteigend auf die Zahlen von Null bis 25 abbildet und wiederum innerhalb von \texttt{decode()} in einer Schleife verwendet wird um jeden einzelnen Buchstaben des übergebenen Textes umzuwandeln. Werte außerhalb des Definitionsbereiches werden vom gegebenen Algorithmus ignoriert. Wir haben uns bewusst für das Dict entschieden und gegen die Version jeden Char jedesmal erneut umzuwandeln. In einem Test erwies sich die Dict Version als doppelt so schnell.
 \begin{lstlisting}
 alph_to_num = {k:v for v , k in enumerate(string.ascii_lowercase)}
 \end{lstlisting}
@@ -347,7 +347,7 @@ if __name__ == "__main__":
 \section{Zu Aufgabe 9}
 % ----------------------------------------------------------------------------
 
-Um zu testen ob das in \hyperref[sec:aufgabe_8]{Aufgabe 8} beschriebene Skript funktioniert wird die Datei \texttt{klartext.txt} verschlüsselt. Zu beachten ist, dass der Pfad zu der Datei entweder relativ zum Skript oder absolut sein muss. In unserem fall ist der Pfad also: \texttt{../../klartext.txt}. Um mit key \texttt{pn} zu verschlüsseln, sieht der Aufruf also wie folgt aus:
+Um zu testen ob das in \hyperref[sec:aufgabe_8]{Aufgabe 8} beschriebene Skript funktioniert wird die Datei \texttt{klartext.txt} verschlüsselt. Um mit key \texttt{pn} zu verschlüsseln, sieht der Aufruf in unserem Fall wie folgt aus:
 
 \begin{lstlisting}
 $ ./affinecipher.py e pn ../../klartext.txt
@@ -383,8 +383,7 @@ Die Funktion \texttt{computeFrequencyTable} bekommt eine Liste übergeben und er
 
 % TODO: insert code?
 
-%
- ----------------------------------------------------------------------------
+%----------------------------------------------------------------------------
 \section{Zu Aufgabe 12}
 % ----------------------------------------------------------------------------
 
@@ -394,8 +393,7 @@ Die \texttt{printFrequencyTable} ist eine Hilfsfunktion, die die Häufigeiten je
 print("\n".join([f"{encode([char])}: {freq}" for char, freq in table.items()]))
 \end{lstlisting}
 
-%
- ----------------------------------------------------------------------------
+%----------------------------------------------------------------------------
 \section{Zu Aufgabe 13}
 % ----------------------------------------------------------------------------
 
@@ -406,7 +404,7 @@ Die Funktion \texttt{computeMostFrequentChars} soll die häufigsten Buchstaben a
 [(1, 3), (2, 1)]     
 \end{lstlisting}
 
-Anschließend muss die Liste in \textbf{reverse} sortiert werden, um die häufigsten Buchstaben am Anfang zu haben. Der zweite Paramter \texttt{n} gibt an wie viele Element die Liste haben soll. Desto größer \texttt{n} gewählt wird, desto länger braucht später das Knacken eines Textes, da mehr Möglichkeiten durchprobiert werden. Es kann aber passieren, dass wenn \texttt{n} zu klein gewählt wird, die richtige Buchstabenkombination gar nicht dabei ist. Dies ist vorallem der Fall wenn der Text in einer Sprache ist. 
+Anschließend muss die Liste in \textbf{reverse} sortiert werden, um die häufigsten Buchstaben am Anfang zu haben. Der zweite Paramter \texttt{n} gibt an wie viele Element die Liste haben soll. Desto größer \texttt{n} gewählt wird, desto länger braucht später das Knacken eines Textes, da mehr Möglichkeiten durchprobiert werden. Es kann aber passieren, dass wenn \texttt{n} zu klein gewählt wird, die richtige Buchstabenkombination gar nicht dabei ist. Dies ist vorallem der Fall wenn der Text in einer anderen Sprache als Deutsch ist. 
 
 Die Liste wird mithilfe von 'slicing' auf die Größe \texttt{n} kopiert. Zum Schluss wird mit Hilfe von 'list comprehension' noch eine Liste erstellt, die nur noch dekodierte Buchstaben (keys im Dictionary) enthält.
 

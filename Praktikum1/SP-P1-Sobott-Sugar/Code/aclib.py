@@ -63,7 +63,7 @@ def acEncrypt(a: int, b: int, plain_text: str) -> str:
         return ""
 
     if gcd(a, modulo) != 1:
-        logger.info("[!!]: Invalid key 'a'. 'a' must be relatively prime to 26.")
+        logger.info(f"[!!]: Invalid key {a}. {a} must be relatively prime to 26.")
         return ""
     
     t = decode(plain_text)
@@ -94,7 +94,7 @@ def acDecrypt(a: int, b: int, cipher_text: str) -> str:
         return ""
 
     if gcd(a, modulo) != 1:
-        logger.info("[!!]: Invalid key 'a'. 'a' must be relatively prime to 26.")
+        logger.info(f"[!!]: Invalid key {a}. {a} must be relatively prime to 26.")
         return ""
 
     a = a % modulo

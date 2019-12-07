@@ -101,8 +101,6 @@ gef➤  x/s 0x402004
 
 Weiterhin wird \texttt{eax} wieder auf 0x0 zurückgesetzt. Danach wird \texttt{printf()} mit den in \texttt{edi} und \texttt{esi} geladenen Parametern aufgerufen. Schlussendlich wird i inkrementiert und daraufhin wieder verglichen (<+41>).
 
-\subsection{•}
-
 \subsection{d)}
 
 \newcommand{\imageseries}[1]{
@@ -186,6 +184,80 @@ i: 0
 \imageseries{16}
 
 16. Mit continue (c) lassen wir das Programm zuende durchlaufen und es wird normal beendet.
+
+
+% ****************************************************************************
+\section{Zu Aufgabe 1}
+% ****************************************************************************
+\subsection{a)}
+
+Anlyse des Programs \textit{gdb-uebung-2.c}
+
+\lstinputlisting{../gdb-uebung-2.c}
+
+Das Programm besteht aus drei Hilfsfunktionen \texttt{f}, \texttt{g}, \texttt{h}, die jeweils 2 int's als Eingabe bekommen und mit Grundrechenarten ein Ergebnis berechnen und zurück geben. Die Berechnungen scheinen willkürlich sein. 
+
+In der \texttt{main} Funcktion, werden zuerst drei int's \texttt{a, b, c} initialisiert werden. Daraufhin wird in einem geschachtelten Funktionsaufruf der Wert von \texttt{c} berechnet. In den Funktionsaufrufen, werden die Rückgabewerte einer Hilfsfunktion immer direkt an die nächste Funktion, als Parameter, übergeben. Am Ende wird durch ein Aufruf der \texttt{printf} Funktion ein formatierter String mit den Werten von den Variablen ausgegeben.
+
+
+\subsection{b)}
+
+Bild \ref{fig:aufgabe2b} zeigt die Ausgabe des Programms.
+\begin{figure}[h!]
+	\includegraphics[width=\textwidth]{Pictures/a2b.png}
+	\caption{Ausgabe von gdb-uebung-2.c}
+	\label{fig:aufgabe2b}
+\end{figure}
+
+
+Wie erwartet sind die Werte von \texttt{a, b} unverändert zur ursprünglichen Initialisierung. Nur \texttt{c} hat den den neuen Wert, den es zugewiesen bekommen hat.
+
+\subsection{c)}
+
+\subsubsection{Reihenfolge der Funktionsaufrufe}
+
+Die Reihenfolge wurde herausgefunden, indem in gdb mit s immer der nächste Schritt ausgeführt wurde. Hierfür wurde das Programm mit Debug Informationen compiliert (Option -g bei gcc).
+
+
+\begin{enumerate}
+\item \texttt{h(9, 5)} (2. h)
+\item \texttt{h(5, 9)} (1. h)
+\item \texttt{g(5, 314)}
+\item \texttt{f(-692, 314)}
+\end{enumerate}
+
+Interessant bei der Ausführung ist, dass bei dem Aufruf von \texttt{f} zuerst der 2. Parameter (\texttt{h} )ausgewertet wird und dann erst der 1. (\texttt{g}).
+
+Stack Frames: TODO
+
+https://stackoverflow.com/questions/2770889/how-can-i-examine-the-stack-frame-with-gdb
+
+
+For the current stack frame:
+
+    info frame lists general info about the frame (where things start in memory, etc.)
+    info args lists arguments to the function
+    info locals lists local variables stored in the frame
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \end{document}

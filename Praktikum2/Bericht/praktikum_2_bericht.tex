@@ -12,9 +12,11 @@
 \usepackage{amssymb}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{mathtools}
+\usepackage{amsfonts}
 
 \definecolor{lstbackground}{rgb}{0.95,0.95,1}      % hellgruener Rahmen
-\lstset{language=Python}
+\lstset{language=C}
 
 \lstset{
   basicstyle=\small\ttfamily,
@@ -53,6 +55,10 @@
   (76050) \\ %
   
 \end{center}
+
+\newpage
+\tableofcontents
+\newpage
 
 % ****************************************************************************
 \section{Zu Aufgabe 1}
@@ -104,6 +110,95 @@ Weiterhin wird \texttt{eax} wieder auf 0x0 zurückgesetzt. Danach wird \texttt{p
 
 
 
+\newpage
+% ****************************************************************************
+\section{Zu Aufgabe 3}
+% ****************************************************************************
+\subsection{a) Analysieren Sie den in der Datei enthaltenen Source Code}
+Das bereitgestellte Quelldatei \texttt{gdb-uebung-3.c} enthält die rekursive Implementierung eines \textbf{Factorial-Algorithmus}, damit ist $f(n) = n! $.
+
+\textbf{Def:} $ n! = n * (n-1) * (n-2) * ... * 1 = \prod_{i = 1}^{n} i ,\;  n \in \mathbb{N} $
+
+\subsubsection{Implementierung}
+\begin{figure}[h]
+\begin{lstlisting}
+unsigned int f(unsigned int i) {
+  if (i>1) {
+    return i * f(i-1);
+  } else {
+    return 1;
+  }
+}
+\end{lstlisting}
+\label{fig:factorial}
+\caption{factorial function}
+\end{figure}
+
+Die Funktion, abgebildet in \ref{fig:factorial} nimmt einen vorzeichenlosen Integer als Argument und gibt als Ergebnis ebenfalls einen vorzeichenlosen Integer zurück. Dabei ist \textbf{int} jedoch betriebssystemabhängig definiert. Für die meisten Systeme kann jedoch angenommen werden, dass es sich dabei um ein \textbf{4 Byte} großes Wort handelt, d.h für den Rückgabewert kommen Werte innerhalb des Wertebereichs $  W = [0,2^{32}-1] $ in Frage. Aufgrund des extrem schnellen Wachstums von $ n! $ ist dies ein sehr beschränkender Faktor, der bei der Nutzung unbedingt mit zu berücksichtigen ist, da es schnell zu einem Überlauf und damit zu einer Verfälschung des Ergebnisses kommen kann. In Zeile 2 wird danach geprüft, ob der übergebene Wert größer 1 ist. Sollte dies der Fall sein, wird das  Produkt von i und dem Ergebnis des Rekursiven Aufrufs von $ f(i-1) $ zurückgegeben. Andernfalls wird die Konstante 1 als Rückgabewert der Funktion genutzt, siehe Zeile 5.
+\newpage
+
+\subsubsection{Aufruf}
+\begin{figure}[h]
+\begin{lstlisting}
+int main() {
+  unsigned int i=5, r=0;
+
+  r = f(i);
+
+  printf("i = %d, f(i) = %d\n", i, r);
+}
+\end{lstlisting}
+\label{fig:factorial-main}
+\caption{invocation of f()}
+\end{figure}
+
+In der \textbf{main()} Funktion wird die in \ref{fig:factorial} beschriebene Funktion \textbf{f(unsigned int)} aufgerufen und dabei \textbf{i = 5} als Argument übergeben. Das Ergebnis des Aufrufs wird der Variable \textbf{int r} zugewiesen, siehe Zeile 4. Danach wird \textbf{i} und das Ergebnis \textbf{r} mittels \textbf{printf()} auf der Kommandozeile ausgegeben.
+
+\subsection{b) Kompilieren Sie den C Code und führen Sie das Programm aus }
+\subsubsection{Kompilieren}
+Das Kompilieren des Quellkodes innerhalb von \texttt{gdb-uebung-3.c} kann mittels des folgenden Befehls auf der Kommandozeile ausgeführt werden.
+\begin{lstlisting}
+$ gcc gdb-uebung-3.c -o gdb-uebung-3
+\end{lstlisting}
+Der in diesem Fall genutzte Compiler heißt \textbf{gcc} (GNU compiler collection). Dabei ist gdb-uebung-3.c der Name der Quelldatei. Mittels \textbf{-o gdb-uebung-3} wird der gewünschte Name, der zu erstellenden Programmdatei, angegeben.
+
+\subsubsection{Ausführen}
+Das Programm kann nun auf der Kommandozeile ausgeführt werden.
+\begin{lstlisting}
+$ ./gdb-uebung-3                    
+i = 5, f(i) = 120
+\end{lstlisting}
+Zum verifizieren des Ergebnisses kann dieses auch noch einmal Händisch berechnet werden, $ \prod_{i = 1}^{5} i = 1 * 2 * 3 * 4 * 5 = 2 * 3 * 20 = 2 * 60 = 120 $. Das Ergebnis stimmt, die Funktionen scheint auf den ersten Blick also richtig implementiert. Um nachzuvollziehen, wie die das Ergebnis zustande kommt, kann der folgende Graph betrachtet werden.
+
+\begin{center}
+\begin{figure}[h]
+	\includegraphics[scale=0.6]{Pictures/aufgabe3aufrufe.pdf}
+	\caption{recursive call of f()}
+	\label{fig:recursive2}
+\end{figure}
+\end{center}
+
+Anfangs wird in \textbf{main()} die Funktion \textbf{f()} mit \textbf{5 als Argument} aufgerufen. Die aufgerufene Funktion f(5) prüft nun, ob der Parameter größer als 1, d.h. \textbf{5 > 1}, ist. Ist dies der Fall, ruft sich die Funktion selbst wieder auf, dieses Mal jedoch mit dem \textbf{dekrementierten} Parameter als Argument. Dies wiederholt sich bis 1 bzw. 0 übergeben wird, in diesem Fall wird 1 zurückgegeben und das Ergebnis 'aufsteigend' berechnet.
+
+\subsection{c) Führen Sie das Programm im GDB aus}
+
+
+
+
+\subsubsection{Wie viele Stack Frames werden erzeugt?}
+
+\subsubsection{Wie ist der Inhalt dieser Stack Frames?}
+
+\subsubsection{Wie wird die Parameterübergabe in Assembler umgesetzt?}
+Für die Übergabe von Parametern an Subroutinen muss unter x86 eine Fallunterscheidung gemacht werden. Je nachdem, ob es sich um Programme für ältere 32-Bit Prozessoren handelt oder um Programme für neuere 64-Bit Prozessoren, werden verschiedene sog. \textbf{Calling Conventions} (Aufruf Konventionen) verwendet. Diese Konventionen dienen dazu einen Ablauf zu definieren, sodass unabhängig vom Autor des Codes darauf vertraut werden kann, dass Abläufe wie z.B. ein Unterprogrammaufruf \textbf{immer} auf die selbe Weise durchgeführt werden.
+
+\subsubsection*{32-Bit}
+Ein Unterprogrammaufruf kann in folgende Schritte untergliedert werden.
+\begin{enumerate}
+\item Zuerst müssen die \textbf{Caller Saved Register}, falls nötig, auf dem Stack gespeichert werden, da die \textbf{aufgerufene} Funktion für diese Register keine Garantie übernimmt, dass diese nicht überschrieben werden. Die Register sind: ebx, ecx, edx, r10, r11.
+\item Danach müssen die Parameter in \textbf{umgekehrter Reihenfolge} auf den Stack gepushed werden. Aufgrund der Funktionsweise des Stacks ist dann der Erste Parameter der Subroutine direkt angrenzend and die gespeicherte Rücksprungadresse, die im nächsten Schritt auf dem Stack hinterlegt wird.
+\item Nun wird mit \textbf{call} der Unterprogrammaufruf durchgeführt. Dabei wird die \textbf{Rücksprungadresse} (die Adresse des auf call folgenden Befehlswortes) auf den Stack gepushed und ein Sprung zum ersten Befehl des Unterprogramms durchgeführt.
+\end{enumerate}
 
 
 

@@ -1,0 +1,17 @@
+\select@language {german}
+\contentsline {section}{\numberline {1}Zu Aufgabe 1}{3}{section.1}% 
+\contentsline {subsection}{\numberline {1.1}a)}{3}{subsection.1.1}% 
+\contentsline {subsection}{\numberline {1.2}b)}{3}{subsection.1.2}% 
+\contentsline {subsection}{\numberline {1.3}c)}{3}{subsection.1.3}% 
+\contentsline {subsection}{\numberline {1.4}•}{4}{subsection.1.4}% 
+\contentsline {section}{\numberline {2}Zu Aufgabe 3}{5}{section.2}% 
+\contentsline {subsection}{\numberline {2.1}a) Analysieren Sie den in der Datei enthaltenen Source Code}{5}{subsection.2.1}% 
+\contentsline {subsubsection}{\numberline {2.1.1}Implementierung}{5}{subsubsection.2.1.1}% 
+\contentsline {subsubsection}{\numberline {2.1.2}Aufruf}{6}{subsubsection.2.1.2}% 
+\contentsline {subsection}{\numberline {2.2}b) Kompilieren Sie den C Code und führen Sie das Programm aus }{6}{subsection.2.2}% 
+\contentsline {subsubsection}{\numberline {2.2.1}Kompilieren}{6}{subsubsection.2.2.1}% 
+\contentsline {subsubsection}{\numberline {2.2.2}Ausführen}{6}{subsubsection.2.2.2}% 
+\contentsline {subsection}{\numberline {2.3}c) Führen Sie das Programm im GDB aus}{7}{subsection.2.3}% 
+\contentsline {subsubsection}{\numberline {2.3.1}Wie viele Stack Frames werden erzeugt?}{7}{subsubsection.2.3.1}% 
+\contentsline {subsubsection}{\numberline {2.3.2}Wie ist der Inhalt dieser Stack Frames?}{7}{subsubsection.2.3.2}% 
+\contentsline {subsubsection}{\numberline {2.3.3}Wie wird die Parameterübergabe in Assembler umgesetzt?}{7}{subsubsection.2.3.3}% 

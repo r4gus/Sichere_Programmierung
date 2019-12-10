@@ -117,7 +117,7 @@ Weiterhin wird \texttt{eax} wieder auf 0x0 zurückgesetzt. Danach wird \texttt{p
 
 \newcommand{\imageseries}[1]{
 \begin{center}
-	\imageseriesExcercise[1][d][#1]
+	\imageseriesExcercise{1}{d}{#1}
 \end{center}
 }
 
@@ -193,7 +193,7 @@ i: 0
 
 
 % ****************************************************************************
-\section{Zu Aufgabe 1}
+\section{Zu Aufgabe 2}
 % ****************************************************************************
 \subsection{a)}
 
@@ -235,16 +235,16 @@ Die Reihenfolge wurde herausgefunden, indem in gdb mit s immer der nächste Schr
 Interessant bei der Ausführung ist, dass bei dem Aufruf von \texttt{f} zuerst der 2. Parameter (\texttt{h} )ausgewertet wird und dann erst der 1. (\texttt{g}).
 \newcommand{\imageseries}[1]{
 \begin{center}
-	\imageseriesExcercise[2][c][#1]
+	\imageseriesExcercise{2}{c}{#1}
 \end{center}
 }
 
-\imageseries[0]
+\imageseries{0}
 
 0. Der erste Stackframe ist der Aufruf der \texttt{main} Funktion. Hier ist zu sehen, dass die 3 lokalen Variablen \texttt{a, b, c} in den \texttt{locals} aufgelistet wird. 
 Die Werte der Variablen sind noch uninitialisiert, da der Breakpoint ganz am Anfang der der Funktion steht, bevor die Variablen initialisiert werden.
 
-\imageseries[1]
+\imageseries{1}
 1. Hier ist der Stackframe der erstellt wurde beim Aufruf der  \texttt{h} Funktion. 
 
 

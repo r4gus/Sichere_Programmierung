@@ -114,44 +114,42 @@ Weiterhin wird \texttt{eax} wieder auf 0x0 zurückgesetzt. Danach wird \texttt{p
    \includegraphics[width=\textwidth]{Pictures/a#1#2_#3.png}
 	\captionof{figure}{#3. Ausgabe von gdb-uebung-#1.c}
 \end{center}
-
-\newcommand{\imageseries}[1]{
-\begin{center}
-	\imageseriesExcercise{1}{d}{#1}
-\end{center}
 }
+
+
+
 
 In dieser Aufgabe geht es nun darum das Programm \texttt{gdb-uebung-1.c} in gdb auszuführen. Im folgenden wird der Ablauf durch Screenshots und entsprechende Erklärungen beschrieben.
 
-\imageseries{1}
+\imageseriesExcercise{1}{d}{1}
 
 
 1. Hier beginnt die \texttt{main} Funktion. Als erstes wird der \texttt{rsp} Zeiger, welcher auf den Stack zeigt, um \texttt{0x10} verschoben, um entprechen Platz auf den Stack zu allozieren.
 
-\imageseries{2}
+\imageseriesExcercise{1}{d}{2}
 
 2. Initialisieren der Variable i  mit 0x0.
 
-\imageseries{3}
+\imageseriesExcercise{1}{d}{3}
 
 3. Unbedingter Sprung in Zeile <main+41>.
 
-\imageseries{4}
+\imageseriesExcercise{1}{d}{4}
 
 4. Ausgabe von i. (Adresse: Wert). Der Wert wird in Dezimal ausgegeben.
 
 Schritte bis zur nächsten Zeile wurden übersprungen, da sie in Aufgabe 1 b) ausführlich erklärt wurden.
 
-\imageseries{5}
+\imageseriesExcercise{1}{d}{5}
 
 5. Der bedinge Sprung \texttt{jbe} (jump below or equal) wird genommen, da $ 0x0 \le 0x13$. Das heißt, das Programm spring zu <main+17>.
 
-\imageseries{6}
+\imageseriesExcercise{1}{d}{6}
 
 6. Schreiben des Wertes von i in eax und eax dann in esi, um i als Parameter an die \texttt{printf} Funktion zu übergeben.
 
-\imageseries{7}
-\imageseries{8}
+\imageseriesExcercise{1}{d}{7}
+\imageseriesExcercise{1}{d}{8}
 
 7.+ 8. Aufrufen der \texttt{printf} Funktion mit i=0. Übergeben wird in rsi und rdi der Wert von i und ein pointer auf den format string. Dieser Aufruf führt zu folgender Ausgabe auf dem Standardoutput:
 
@@ -159,35 +157,35 @@ Schritte bis zur nächsten Zeile wurden übersprungen, da sie in Aufgabe 1 b) au
 i: 0
 \end{lstlisting}
 
-\imageseries{9}
+\imageseriesExcercise{1}{d}{9}
 
 9. Hier wird der Wert von i nun um eins erhöht.
 
-\imageseries{10}
+\imageseriesExcercise{1}{d}{10}
 
 10. Nach der ausführung ist der Wert 1.
 
-\imageseries{11}
+\imageseriesExcercise{1}{d}{11}
 
 11. Als nächstes wollen wir das Programm bis zum letzten Durchlauf laufen lassen und dort dann einen Breakpoint setzen. Als erstes geben wir uns hierfür die Adresse für i aus. Diese wird benötigt, da der Conditional Breakpoint nur stoppen soll, wenn i einen bestimmten Wert hat. In der nächsten Zeile setzen wir den Conditional Breakpoint in die Zeile wo der bedingte Sprung ist (<main+45>). Als Bedingung geben wir an, dass der Wert von i gleich 0x13 sein soll. Wie auch in C müssen Adressen jeweils mit dem * dereferenziert werden. Am Ende wird noch kontrolliert ob der breakpoint richtig gesetzt wurde.
 
-\imageseries{12}
+\imageseriesExcercise{1}{d}{12}
 
 12. Lassen wir das Programm nun mit continue (c) laufen, sehen wir alle Schleifendurchläufe mit den entsprechenden Ausgaben. Die letzte Ausgabe ist 18 (0x12).
 
-\imageseries{13}
+\imageseriesExcercise{1}{d}{13}
 
 13. Der bedingte Sprung wird ein letztes Mal genommen, da der Wert von i gleich 19 (0x13) ist.
 
-\imageseries{14}
+\imageseriesExcercise{1}{d}{14}
 
 14. Die Schleife ist eine letztes Mal durchgelaufen wie erwartet und hat noch die 19 ausgegeben. Wenn wir nun aber an dem bedingten Sprung angkommen wird dier nicht mehr genommen, da die Bedingung nicht mehr zutrifft (i = 0x14 und somit glit nicht mehr i <= 0x13).
 
-\imageseries{15}
+\imageseriesExcercise{1}{d}{15}
 
 15. Anstatt an <main+17> zu springen, wurde zur nächsten Anweisung gesprungen <main+47>. Somit wurde die Schleife verlassen. Hier wird noch die 0 als Rückgabewert gespeichert. 
 
-\imageseries{16}
+\imageseriesExcercise{1}{d}{16}
 
 16. Mit continue (c) lassen wir das Programm zuende durchlaufen und es wird normal beendet.
 
@@ -233,18 +231,13 @@ Die Reihenfolge wurde herausgefunden, indem in gdb mit s immer der nächste Schr
 \end{enumerate}
 
 Interessant bei der Ausführung ist, dass bei dem Aufruf von \texttt{f} zuerst der 2. Parameter (\texttt{h} )ausgewertet wird und dann erst der 1. (\texttt{g}).
-\newcommand{\imageseries}[1]{
-\begin{center}
-	\imageseriesExcercise{2}{c}{#1}
-\end{center}
-}
 
-\imageseries{0}
+
+\imageseriesExcercise{2}{c}{0}
 
 0. Der erste Stackframe ist der Aufruf der \texttt{main} Funktion. Hier ist zu sehen, dass die 3 lokalen Variablen \texttt{a, b, c} in den \texttt{locals} aufgelistet wird. 
 Die Werte der Variablen sind noch uninitialisiert, da der Breakpoint ganz am Anfang der der Funktion steht, bevor die Variablen initialisiert werden.
 
-\imageseries{1}
 1. Hier ist der Stackframe der erstellt wurde beim Aufruf der  \texttt{h} Funktion. 
 
 
@@ -259,7 +252,13 @@ For the current stack frame:
     info args lists arguments to the function
     info locals lists local variables stored in the frame
 
-
+\begin{center}
+\begin{figure}[h]
+	\includegraphics[scale=0.6]{Pictures/stack_template.png}
+	\caption{recursive call of f()}
+	\label{fig:recursive2}
+\end{figure}
+\end{center}
 
 
 
@@ -368,7 +367,6 @@ Ein Unterprogrammaufruf kann in folgende Schritte untergliedert werden.
 \item Die ersten Befehle des Unterprogramms bilden einen sog. \textbf{Function Prologue}. Hier wird als aller erstes der aktuelle Wert des \textbf{Base-Pointers (bp)} auf den Stack gepushed, sowie die \textbf{Callee-Saved Register} falls benötigt. Danach wird der Aktuelle Wert des \textbf{Stack-Pointers (sp)} genutzt um den für den derzeitigen \textbf{Stack-Frame} verantwortlichen bp zu initialisieren, indem sp in bp verschoben wird. Danach wird der sp mit \textbf{SUB} verringert um Speicher auf dem Stack für lokale Variablen zu allozieren.
 \item Am Ende der Subroutine wird dann der sog. \textbf{Function Epilogue} ausgeführt. Hier werden falls vorhanden, die gesicherten Register gepoppt, zusammen ...
 \end{enumerate}
-
 
 
 \end{document}

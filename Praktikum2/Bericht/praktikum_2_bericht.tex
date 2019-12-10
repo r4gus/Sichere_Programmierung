@@ -109,7 +109,7 @@ Weiterhin wird \texttt{eax} wieder auf 0x0 zurückgesetzt. Danach wird \texttt{p
 
 \subsection{d)}
 
-\newcommand{\imageseriesExcercise}[1][2][3]{
+\newcommand{\imageseriesExcercise}[3]{
 \begin{center}
    \includegraphics[width=\textwidth]{Pictures/a#1#2_#3.png}
 	\captionof{figure}{#3. Ausgabe von gdb-uebung-#1.c}
@@ -364,7 +364,9 @@ Ein Unterprogrammaufruf kann in folgende Schritte untergliedert werden.
 \begin{enumerate}
 \item Zuerst müssen die \textbf{Caller Saved Register}, falls nötig, auf dem Stack gespeichert werden, da die \textbf{aufgerufene} Funktion für diese Register keine Garantie übernimmt, dass diese nicht überschrieben werden. Die Register sind: ebx, ecx, edx, r10, r11.
 \item Danach müssen die Parameter in \textbf{umgekehrter Reihenfolge} auf den Stack gepushed werden. Aufgrund der Funktionsweise des Stacks ist dann der Erste Parameter der Subroutine direkt angrenzend and die gespeicherte Rücksprungadresse, die im nächsten Schritt auf dem Stack hinterlegt wird.
-\item Nun wird mit \textbf{call} der Unterprogrammaufruf durchgeführt. Dabei wird die \textbf{Rücksprungadresse} (die Adresse des auf call folgenden Befehlswortes) auf den Stack gepushed und ein Sprung zum ersten Befehl des Unterprogramms durchgeführt.
+\item Nun wird mit \textbf{call} der Unterprogrammaufruf durchgeführt. Dabei wird die \textbf{Rücksprungadresse} (die Adresse des auf call folgenden Befehlswortes) auf den Stack gepushed und ein Sprung zum ersten Befehl des Unterprogramms, markiert durch das angegebene \textbf{Label}, gesprungen.
+\item Die ersten Befehle des Unterprogramms bilden einen sog. \textbf{Function Prologue}. Hier wird als aller erstes der aktuelle Wert des \textbf{Base-Pointers (bp)} auf den Stack gepushed, sowie die \textbf{Callee-Saved Register} falls benötigt. Danach wird der Aktuelle Wert des \textbf{Stack-Pointers (sp)} genutzt um den für den derzeitigen \textbf{Stack-Frame} verantwortlichen bp zu initialisieren, indem sp in bp verschoben wird. Danach wird der sp mit \textbf{SUB} verringert um Speicher auf dem Stack für lokale Variablen zu allozieren.
+\item Am Ende der Subroutine wird dann der sog. \textbf{Function Epilogue} ausgeführt. Hier werden falls vorhanden, die gesicherten Register gepoppt, zusammen ...
 \end{enumerate}
 
 

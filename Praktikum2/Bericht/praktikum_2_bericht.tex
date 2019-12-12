@@ -362,22 +362,79 @@ Anfangs wird in \textbf{main()} die Funktion \textbf{f()} mit \textbf{5 als Argu
 
 
 \subsubsection{Wie viele Stack Frames werden erzeugt?}
+Um die Anzahl der \textbf{Stack Frames} in GDB zu ermitteln, kann man wie folgt vorgehen.
+\begin{itemize}
+	\item Wir wissen:
+	\begin{itemize}
+		\item Das Programm ruft sich selber rekursiv auf.
+		\item Dies geschieht solange der übergebene Parameter > 1 ist.
+		\item Andernfalls wird 1 zurückgegeben.
+		\item Der Parameter wird innerhalb von f() dekrementiert und als Argument wieder an f() übergeben.
+		\item Das Argument wird bei jedem rekursiven Aufruf wird mittels \textbf{RDI} übergeben (siehe \ref{sec:calling_convention}).
+	\end{itemize}
+\end{itemize}
+
+D.h. wenn ein Bedingter Break Point so gesetzt wird, dass das Programm am Anfang der aufgerufenen Funktion f() anhält, genau dann wenn \textbf{RDI = 1} ist, können wir bequem die Anzahl der Stack Frames ablesen. Denn in diesem Fall können wir sicher sein, dass kein weiteres Mal f() rekursiv aufgerufen wird.
+
+\begin{lstlisting}
+gef>  break f if $rdi == 1
+gef>  r
+\end{lstlisting}
+
+Das Programm wird nun bei maximaler Tiefe \textbf{t = 6}, der Funktionsaufrufe angehalten. Diese Tiefe entspricht auch der Anzahl der Stack Frames, da für jeden Funktionsaufruf ein eigener Frame angelegt wird.
+
+\imageseriesExcercise{3}{c}{1}
 
 \subsubsection{Wie ist der Inhalt dieser Stack Frames?}
+Die Werte der Rücksprungadressen, Frame und Stack Pointer sind aufgrund von \textbf{Address Space Layout Randomisation (ASLR)} immer unterschiedlich (bis auf die letzten 12 Bit), deshalb werden im Anschluss relative Adressen angegeben.
+
+
+
+
 
 \subsubsection{Wie wird die Parameterübergabe in Assembler umgesetzt?}
+\label{sec:calling_convention}
 Für die Übergabe von Parametern an Subroutinen muss unter x86 eine Fallunterscheidung gemacht werden. Je nachdem, ob es sich um Programme für ältere 32-Bit Prozessoren handelt oder um Programme für neuere 64-Bit Prozessoren, werden verschiedene sog. \textbf{Calling Conventions} (Aufruf Konventionen) verwendet. Diese Konventionen dienen dazu einen Ablauf zu definieren, sodass unabhängig vom Autor des Codes darauf vertraut werden kann, dass Abläufe wie z.B. ein Unterprogrammaufruf \textbf{immer} auf die selbe Weise durchgeführt werden.
 
 \subsubsection*{32-Bit}
 Ein Unterprogrammaufruf kann in folgende Schritte untergliedert werden.
 \begin{enumerate}
 \item Zuerst müssen die \textbf{Caller Saved Register}, falls nötig, auf dem Stack gespeichert werden, da die \textbf{aufgerufene} Funktion für diese Register keine Garantie übernimmt, dass diese nicht überschrieben werden. Die Register sind: ebx, ecx, edx, r10, r11.
+
 \item Danach müssen die Parameter in \textbf{umgekehrter Reihenfolge} auf den Stack gepushed werden. Aufgrund der Funktionsweise des Stacks ist dann der Erste Parameter der Subroutine direkt angrenzend and die gespeicherte Rücksprungadresse, die im nächsten Schritt auf dem Stack hinterlegt wird.
+
 \item Nun wird mit \textbf{call} der Unterprogrammaufruf durchgeführt. Dabei wird die \textbf{Rücksprungadresse} (die Adresse des auf call folgenden Befehlswortes) auf den Stack gepushed und ein Sprung zum ersten Befehl des Unterprogramms, markiert durch das angegebene \textbf{Label}, gesprungen.
-\item Die ersten Befehle des Unterprogramms bilden einen sog. \textbf{Function Prologue}. Hier wird als aller erstes der aktuelle Wert des \textbf{Base-Pointers (bp)} auf den Stack gepushed, sowie die \textbf{Callee-Saved Register} falls benötigt. Danach wird der Aktuelle Wert des \textbf{Stack-Pointers (sp)} genutzt um den für den derzeitigen \textbf{Stack-Frame} verantwortlichen bp zu initialisieren, indem sp in bp verschoben wird. Danach wird der sp mit \textbf{SUB} verringert um Speicher auf dem Stack für lokale Variablen zu allozieren.
-\item Am Ende der Subroutine wird dann der sog. \textbf{Function Epilogue} ausgeführt. Hier werden falls vorhanden, die gesicherten Register gepoppt, zusammen ...
+
+\item Die ersten Befehle des Unterprogramms bilden einen sog. \textbf{Function Prologue}. Hier werden als aller erstes die Werte der \textbf{Callee Save Register}, falls die entsprechenden Register benötigt werden, sowie der \textbf{Base Pointer (bp)} auf den Stack gepushed. Danach wird der Aktuelle Wert des \textbf{Stack-Pointers (sp)} genutzt um den für den derzeitigen \textbf{Stack-Frame} verantwortlichen bp zu initialisieren, indem der Wert von sp in bp verschoben wird. Danach wird der sp mit \textbf{SUB} verringert um Speicher auf dem Stack für lokale Variablen zu allozieren.
+
+\item Am Ende der Subroutine wird dann der sog. \textbf{Function Epilogue} ausgeführt. Als erstes wird der Wert von bp wieder in sp verschoben, wodurch der allozierte Speicherplatz auf dem Stack wieder freigegeben wird. Danach werden die im Epilogue gepushten Werte, in sinngemäß umgekehrter Reihenfolge in die jeweiligen Register gepoppt. Der Rückgabewert wird in das \textbf{A-Register} verschoben und schlussendlich mit dem \textbf{RET} Befehl das Unterprogramm wieder verlassen, indem zur gespeicherten Rücksprungadresse gesprungen wird.  
 \end{enumerate}
 
+\subsubsection*{64-Bit}
+Ein Unterprogrammaufruf unter 64-Bit läuft wie oben beschrieben ab, mit einer Änderung. Die Argumente werden hier mithilfe von Registern übergeben. Das erste Argument wird über \textbf{RDI} und die weiteren mithilfe von \textbf{RSI}, \textbf{RDX}, \textbf{RCX}, \textbf{r8}, \textbf{r9} übergeben. Sollten mehr Argumente übergeben werden müssen, dann werden diese wie oben beschrieben mittels Stack übergeben.
+
+\imageseriesExcercise{3}{c}{0}
+
+\begin{figure}[h]
+\begin{lstlisting}
+// #### PROLOGUE ####
+PUSH	rbp			// save rbp on the stack
+MOV		rbp, rsp
+SUB		rsp, 0x10	// allocate 16 byte on the stack
+
+...
+
+// #### EPILOGUE ####
+MOV		rsp, rbp	// deallocate memory
+POP		rbp			// restore old base pointer
+RET					// return to calling function
+\end{lstlisting}
+\label{lst:epipro}
+\caption{typical function prologue and epilogue}
+\end{figure}
+
+
+\newpage
 % ****************************************************************************
 \section{Zu Aufgabe 5: Binäre Suche}
 % ****************************************************************************

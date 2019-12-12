@@ -62,9 +62,13 @@
 \newpage
 
 % ****************************************************************************
-\section{Zu Aufgabe 1}
+\section{Zu Aufgabe 1: C-for-Schleifen in Assembler}
 % ****************************************************************************
-\subsection{a)}
+\subsection{a) Analyse des C-Codes}
+
+Analyse des folgenden C Codes:
+\lstinputlisting{../gdb-uebung-1.c}
+
 Zu beginn der \texttt{main()} Funktion wird eine \texttt{unsigned int} Variable, i, deklariert, jedoch nicht initialisiert, d.h. bis auf wenige Ausnahmen $i \in \{0..2^{32}-1\}$.
 
 Danach wird die Variable im Kopf der darauf folgenden For-Schleife mit 0 initialisiert. Die Schleife inkrementiert die Variable i am Ende jedes Schleifendurchlaufs und tritt erneut in die Schleife ein, solange i kleiner 20 ist.
@@ -222,6 +226,11 @@ Wie erwartet sind die Werte von \texttt{a, b} unverändert zur ursprünglichen I
 
 Die Reihenfolge wurde herausgefunden, indem in gdb mit s immer der nächste Schritt ausgeführt wurde. Hierfür wurde das Programm mit Debug Informationen compiliert (Option -g bei gcc).
 
+Hier nochmal die relevante Code Zeile:
+\begin{lstlisting}
+c = f(g(a,h(a,b)),h(b,a));
+\end{lstlisting}
+
 
 \begin{enumerate}
 \item \texttt{h(9, 5)} (2. h)
@@ -232,42 +241,42 @@ Die Reihenfolge wurde herausgefunden, indem in gdb mit s immer der nächste Schr
 
 Interessant bei der Ausführung ist, dass bei dem Aufruf von \texttt{f} zuerst der 2. Parameter (\texttt{h} )ausgewertet wird und dann erst der 1. (\texttt{g}).
 
+%TODO Zeigen rsp anpassen, wenn es keine locals gibt
+
+Im Folgenden werden die einzelnen Stackframes nun genauer betrachtet. Jedes Stackframe wurde in einem Bild dargestellt. Die Vorlage für so ein Stackframe sieht wie folgt aus. 
+
+\imageseriesExcercise{2}{c}{11}
+
+Hier ist links ein Auschnitt des \textit{Stacks} zu sehen und auf der rechten Seite ein Ausschnitt der \textit{Register}. 
+
+\textbf{Stack}: \newline
+Bei dem Stack Ausschnitt ist der relevante Teil in dem sich der StackFrame befindet. Auf der linken Seite vom Stack sind die einzelnen Adressen relativ zum \texttt{RBP} Register angegeben und auf der rechten Seite die Bedeutung des Inhalts. 
+
+Als oberstes steht die \textit{Rücksprungadresse} zu dieser wird zurück gesprungen, wenn die Funktion fertig ausgeführt wird. An dieser Stelle steht immer die Anweisung, die nach dem Aufruf der Funktion kommt. 
+
+Danach kommt der Inhalt des \texttt{RBP} Registers. %TODO Wofür genau!
+Als voletztes kommen noch optional lokale Variablen.
+Als unterstes im Stack kommt die \texttt{RedZone}, in die nicht geschrieben werden darf.
+
+\textbf{Register}: \newline
+In die Register werden die Paramter eingetragen, mit denen die Funktion aufgerufen wurde. Der erste Parameter wird in \texttt{RDI}, der zweite in \texttt{RSI} usw. gespeichert. Werden mehr als 6 Parameter übergeben, werden die restlichen Parameter im Stack gespeichert.
+
+Nun kann jeder Inhalt des Stackframes gelesen werden. Pointer im Stack wurden aufgelöst um besser zu sehen wohin z.B. die Rücksprungadresse zeigt. Anonsten würden an den entsprechenden Stellen Adressen stehen. Das Programm wird wieder ausgeführt und am Anfang einer Funktion weren die Daten notiert.
 
 \imageseriesExcercise{2}{c}{0}
+Zu sehen ist, dass als Paramter die die aus Paramter übergeben wurden. In unserem Fall nur die Anzahl und der Name des Programms. Führt man die Zeile in der die Variablen initialisiert werden, sieht man auch diese Werte im Stack.
 
-0. Der erste Stackframe ist der Aufruf der \texttt{main} Funktion. Hier ist zu sehen, dass die 3 lokalen Variablen \texttt{a, b, c} in den \texttt{locals} aufgelistet wird. 
-Die Werte der Variablen sind noch uninitialisiert, da der Breakpoint ganz am Anfang der der Funktion steht, bevor die Variablen initialisiert werden.
+\imageseriesExcercise{2}{c}{1}
+Die Funktion \texttt{h} wurde aufgerufen und die entsprechenden Parameter sind in den Registern zu sehen. Außerdem sieht man, dass die Rücksprungadresse nun in eine Zeile in der \texttt{main} Funktion zeigt und nicht wie zuvor in C internen Code.
 
-1. Hier ist der Stackframe der erstellt wurde beim Aufruf der  \texttt{h} Funktion. 
+\imageseriesExcercise{2}{c}{2}
+Zweiter Aufruf der Funktion \texttt{h} mit umgedrehten Paramtern un höherer Rücksprungadresse. 
 
+\imageseriesExcercise{2}{c}{3}
+Aufruf der Funktion \texttt{g} mit dem Wert aus der Variable \texttt{a} und dem Rückgabewert der Funktion \texttt{h}.
 
-Stack Frames: TODO
-
-https://stackoverflow.com/questions/2770889/how-can-i-examine-the-stack-frame-with-gdb
-
-
-For the current stack frame:
-
-    info frame lists general info about the frame (where things start in memory, etc.)
-    info args lists arguments to the function
-    info locals lists local variables stored in the frame
-
-\begin{center}
-\begin{figure}[h]
-	\includegraphics[scale=0.6]{Pictures/stack_template.png}
-	\caption{recursive call of f()}
-	\label{fig:recursive2}
-\end{figure}
-\end{center}
-
-
-
-
-
-
-
-
-
+\imageseriesExcercise{2}{c}{4}
+Aufruf der Funktion \texttt{f} mit den Rückgabewerten der Funktionen \texttt{g, h}.
 
 
 

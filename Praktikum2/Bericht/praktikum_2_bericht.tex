@@ -66,7 +66,8 @@
 % ****************************************************************************
 \subsection{a) Analyse des C-Codes}
 
-Analyse des folgenden C Codes:
+\textit{gdb-uebung-1.c}
+
 \lstinputlisting{../gdb-uebung-1.c}
 
 Zu beginn der \texttt{main()} Funktion wird eine \texttt{unsigned int} Variable, i, deklariert, jedoch nicht initialisiert, d.h. bis auf wenige Ausnahmen $i \in \{0..2^{32}-1\}$.
@@ -76,15 +77,16 @@ Innerhalb der Schleife wird der Wert von i, zum jeweiligen Zeitpunkt, formatiert
 
 \textbf{Potentielles Problem: Es sollte \texttt{"\%2u"} verwendet werden, da \texttt{d} für die Formatierung von signed Integern verwendet wird.} In diesem Fall spielt die Formatierung aber keine Rolle.
 
-\subsection{b)}
-Bild \ref{fig:aufgabe1b} zeigt die Ausgabe des Programms.
-\begin{figure}[h]
-	\includegraphics[scale=0.9]{Pictures/aufgabe1b.png}
-	\caption{Ausgabe von gdb-uebung-1.c}
-	\label{fig:aufgabe1b}
-\end{figure}
+\subsection{b) Ausführen des Programms}
+Das Programm wurde compiliert und ausgeführt. Wie erwartet werden die Zahlen von 0 bis 19 ausgegeben.
 
-\subsection{c)}
+\begin{center}
+   \includegraphics[scale=0.9]{Pictures/aufgabe1b.png}
+	\captionof{figure}{Ausgabe von gdb-uebung-1.c}
+\end{center}
+
+
+\subsection{c) Analyse des Assember-Codes}
 \begin{lstlisting}
 	<+8>:	mov    DWORD PTR [rbp-0x4],0x0
     <+15>:	jmp    0x40113b <main+41>
@@ -111,7 +113,7 @@ gef➤  x/s 0x402004
 
 Weiterhin wird \texttt{eax} wieder auf 0x0 zurückgesetzt. Danach wird \texttt{printf()} mit den in \texttt{edi} und \texttt{esi} geladenen Parametern aufgerufen. Schlussendlich wird i inkrementiert und daraufhin wieder verglichen (<+41>).
 
-\subsection{d)}
+\subsection{d) Ausführen des Programms in gdb}
 
 \newcommand{\imageseriesExcercise}[3]{
 \begin{center}
@@ -119,8 +121,6 @@ Weiterhin wird \texttt{eax} wieder auf 0x0 zurückgesetzt. Danach wird \texttt{p
 	\captionof{figure}{#3. Ausgabe von gdb-uebung-#1.c}
 \end{center}
 }
-
-
 
 
 In dieser Aufgabe geht es nun darum das Programm \texttt{gdb-uebung-1.c} in gdb auszuführen. Im folgenden wird der Ablauf durch Screenshots und entsprechende Erklärungen beschrieben.
@@ -195,11 +195,11 @@ i: 0
 
 
 % ****************************************************************************
-\section{Zu Aufgabe 2}
+\section{Zu Aufgabe 2: Stackframes}
 % ****************************************************************************
-\subsection{a)}
+\subsection{a) Anlyse des C-Codes}
 
-Anlyse des Programs \textit{gdb-uebung-2.c}
+\textit{gdb-uebung-2.c}
 
 \lstinputlisting{../gdb-uebung-2.c}
 
@@ -208,7 +208,7 @@ Das Programm besteht aus drei Hilfsfunktionen \texttt{f}, \texttt{g}, \texttt{h}
 In der \texttt{main} Funcktion, werden zuerst drei int's \texttt{a, b, c} initialisiert werden. Daraufhin wird in einem geschachtelten Funktionsaufruf der Wert von \texttt{c} berechnet. In den Funktionsaufrufen, werden die Rückgabewerte einer Hilfsfunktion immer direkt an die nächste Funktion, als Parameter, übergeben. Am Ende wird durch ein Aufruf der \texttt{printf} Funktion ein formatierter String mit den Werten von den Variablen ausgegeben.
 
 
-\subsection{b)}
+\subsection{b) Ausführen des Programms}
 
 Bild \ref{fig:aufgabe2b} zeigt die Ausgabe des Programms.
 \begin{figure}[h!]
@@ -220,11 +220,11 @@ Bild \ref{fig:aufgabe2b} zeigt die Ausgabe des Programms.
 
 Wie erwartet sind die Werte von \texttt{a, b} unverändert zur ursprünglichen Initialisierung. Nur \texttt{c} hat den den neuen Wert, den es zugewiesen bekommen hat.
 
-\subsection{c)}
+\subsection{c) Stackframes}
 
 \subsubsection{Reihenfolge der Funktionsaufrufe}
 
-Die Reihenfolge wurde herausgefunden, indem in gdb mit s immer der nächste Schritt ausgeführt wurde. Hierfür wurde das Programm mit Debug Informationen compiliert (Option -g bei gcc).
+Als erstes soll festgestell werde, in welcher Reihenfolge die Funktionen aufgerufen werden. Hierfür wurde in gdb mit s immer der nächste Schritt ausgeführt. Um C-Code zu sehen wurde das Programm mit Debug Informationen compiliert (Option -g bei gcc).
 
 Hier nochmal die relevante Code Zeile:
 \begin{lstlisting}
@@ -240,6 +240,8 @@ c = f(g(a,h(a,b)),h(b,a));
 \end{enumerate}
 
 Interessant bei der Ausführung ist, dass bei dem Aufruf von \texttt{f} zuerst der 2. Parameter (\texttt{h} )ausgewertet wird und dann erst der 1. (\texttt{g}).
+
+\subsubsection{Analyse der Stackframes}
 
 %TODO Zeigen rsp anpassen, wenn es keine locals gibt
 

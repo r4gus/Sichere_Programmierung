@@ -15,6 +15,7 @@
 \usepackage{graphicx}
 \usepackage{mathtools}
 \usepackage{amsfonts}
+\usepackage{float}
 
 \definecolor{lstbackground}{rgb}{0.95,0.95,1}      % hellgruener Rahmen
 \lstset{language=C}
@@ -388,7 +389,15 @@ Das Programm wird nun bei maximaler Tiefe \textbf{t = 6}, der Funktionsaufrufe a
 \subsubsection{Wie ist der Inhalt dieser Stack Frames?}
 Die Werte der Rücksprungadressen, Frame und Stack Pointer sind aufgrund von \textbf{Address Space Layout Randomisation (ASLR)} immer unterschiedlich (bis auf die letzten 12 Bit), deshalb werden im Anschluss relative Adressen angegeben.
 
+Main als auch f() allozieren für sich jedes mal 16 Byte auf dem Stack. f() speichert dann den übergebenen Wert direkt unter dem gespeicherten Frame Pointer. Am Schluss wird das berechnete Ergebnis in main(), auf den Stack an Stelle rbp-0x8 geschrieben (rote Markierung).
 
+\begin{center}
+\begin{figure}[H]
+	\includegraphics[scale=0.8, angle=90]{Pictures/a3_stack_frames.pdf}
+	\caption{Stack Frames aller Funktionsaufrufe für i = 5}
+	\label{fig:recursive3}
+\end{figure}
+\end{center}
 
 
 
@@ -410,12 +419,11 @@ Ein Unterprogrammaufruf kann in folgende Schritte untergliedert werden.
 \item Am Ende der Subroutine wird dann der sog. \textbf{Function Epilogue} ausgeführt. Als erstes wird der Wert von bp wieder in sp verschoben, wodurch der allozierte Speicherplatz auf dem Stack wieder freigegeben wird. Danach werden die im Epilogue gepushten Werte, in sinngemäß umgekehrter Reihenfolge in die jeweiligen Register gepoppt. Der Rückgabewert wird in das \textbf{A-Register} verschoben und schlussendlich mit dem \textbf{RET} Befehl das Unterprogramm wieder verlassen, indem zur gespeicherten Rücksprungadresse gesprungen wird.  
 \end{enumerate}
 
+\newpage
 \subsubsection*{64-Bit}
 Ein Unterprogrammaufruf unter 64-Bit läuft wie oben beschrieben ab, mit einer Änderung. Die Argumente werden hier mithilfe von Registern übergeben. Das erste Argument wird über \textbf{RDI} und die weiteren mithilfe von \textbf{RSI}, \textbf{RDX}, \textbf{RCX}, \textbf{r8}, \textbf{r9} übergeben. Sollten mehr Argumente übergeben werden müssen, dann werden diese wie oben beschrieben mittels Stack übergeben.
 
-\imageseriesExcercise{3}{c}{0}
-
-\begin{figure}[h]
+\begin{figure}[H]
 \begin{lstlisting}
 // #### PROLOGUE ####
 PUSH	rbp			// save rbp on the stack
@@ -430,8 +438,106 @@ POP		rbp			// restore old base pointer
 RET					// return to calling function
 \end{lstlisting}
 \label{lst:epipro}
-\caption{typical function prologue and epilogue}
+\caption{Typischer Funktionsprolog und -epilog}
 \end{figure}
+
+\subsubsection*{Programmbeispiel}
+Ein Beispiel für einen Funktionsaufruf mit Argumentübergabe ist folgende Stelle.
+\imageseriesExcercise{3}{c}{0}
+Hier wird, bevor f() aufgerufen wird, der Wert von i (5), welcher sich in EAX befindet mittels MOV nach EDI verschoben. In f() selber wird dann als erstes Platz für lokale Variablen und Parameter geschaffen, indem Speicher alloziert wird.
+\imageseriesExcercise{3}{c}{2}
+Danach wird das übergebene Argument von EDI, für die weitere Nutzung, nach rbp-0x4 verschoben. Dies spiegelt einen typischen 64-Bit Funktionaufruf unter x86 wieder. 
+
+\newpage
+% ****************************************************************************
+\section{Zu Aufgabe 4}
+% ****************************************************************************
+\subsection{a) Analysieren Sie den in der Datei enthaltenen Source Code}
+\subsubsection{Analyse}
+Das gegebene Programm soll die Summe mehrere Fließkommazahlen mittels einer Schleife berechnen. Dabei wird ebenfalls ein Float als Laufvariable i in der Schleife verwendet. Die Schleife zählt dabei, in jeder Iteration, zur Summe den aktuellen Wert von i hinzu. Danach wird ein Zähler namens anzahl inkrementiert und zu i der Wert 0.01 hinzugezählt. Die Schleife wird solange ausgeführt, wie i den Wert 1000.03 nicht übersteigt.
+
+\lstinputlisting{../gdb-uebung-4.c}
+
+Am Ende wird dann noch der in Zeile 13 zu sehende, formatierte String ausgegeben. Aufgrund der Benutzung einer Fließkommazahl, ist eine gewisse Ungenauigkeit mit einzurechnen, da Fließkommazahlen nur annäherungsweise in Computern dargestellt werden können.
+
+\subsubsection{Floating Point Numbers}
+Grundlegend unterscheidet man in \textbf{32-Bit Floating point Zahlen} (float) und \textbf{64-Bit (double precision) Floating Point Zahlen} (double). Der \textbf{IEEE 754 32-bit floating-point standard} ist z.B. wie folgt definiert.
+\imageseriesExcercise{4}{a}{0}
+Dabei wird die Zahl intern in drei Teilbereichen dargestellt. \textbf{S} gibt das Vorzeichen an, d.h. 0 bedeutet positiv und 1 negativ. 
+
+Die Zahl selber wird normalisiert abgespeichert, d.h. die Fließkommazahl wird so verschoben, dass nur eine 1 vor dem Komma steht. Damit man die Zahl später wieder rekonstruieren kann, wird der Exponent um den verschoben wurde plus 127 mit abgespeichert. Man spricht dann auch vom \textbf{biased exponent}, da zu ihm ein Bias hinzugefügt wurde. Aufgrund der Tatsache, dass durch diese Normalisierung immer eine einzige 1 vor dem Komma steht, wird diese in der internen Darstellung nicht mit angegeben, dadurch steht ein weiteres Bit für die \textbf{fraction} zur Verfügung. Ein floating point Zahl f kann demnach wie folgt angegeben werden.
+
+\begin{figure}[H]
+\begin{center}
+\[f = (-1)^{S} * 1.fraction * 2^{E-127}\]
+\end{center}
+\label{math:ieefp:1}
+\caption{IEEE 32-bit floating point}
+\end{figure}
+
+\subsubsection*{Beispiel}
+\begin{figure}[H]
+\begin{center}
+\[
+-0.125_{10} = -0.001_{2}
+= (-1)^{1} * 1.0 * 2^{-3}
+= (-1)^{1} * 1.0 * 2^{-3+127-127}
+= (-1)^{1} * 1.0 * 2^{124-127}
+\]
+\end{center}
+\label{math:ieefp:2}
+\caption{Beispiel anhand von -0.125}
+\end{figure}
+
+Daraus ergibt sich:
+\begin{table}[H]
+\begin{tabular}{l l l}
+S & E & fraction \\
+1 & 01111100 & 00000000000000000000000\\
+\end{tabular}
+\end{table}
+
+\subsection{b) Kompilieren Sie den C Code und führen Sie das Programm aus }
+\subsubsection{Kompilieren}
+Das Kompilieren des Quellkodes innerhalb von \texttt{gdb-uebung-4.c} kann mittels des folgenden Befehls auf der Kommandozeile ausgeführt werden.
+\begin{lstlisting}
+$ gcc gdb-uebung-4.c -o gdb-uebung-4
+\end{lstlisting}
+Der in diesem Fall genutzte Compiler heißt \textbf{gcc} (GNU compiler collection). Dabei ist gdb-uebung-3.c der Name der Quelldatei. Mittels \textbf{-o gdb-uebung-3} wird der gewünschte Name, der zu erstellenden Programmdatei, angegeben.
+
+\subsubsection{Ausführen}
+Das Programm kann nun auf der Kommandozeile ausgeführt werden.
+\begin{lstlisting}
+$ ./gdb-uebung-4                    
+Summe: 3000.030029, Anzahl: 3
+\end{lstlisting}
+Das Ergebnis überrascht jedoch zuerst. Eigentlich hätte es zu einem weiteren Durchlaufen der Schleife kommen sollen und auch das Ergebnis weicht um 0.000029 vom erwarteten Zwischenergebnis 3000.03 ab.
+
+Tabellarisiert haben die Variablen zum n'ten Schleifendurchlauf folgende Zustände.
+\begin{table}[H]
+\begin{tabular}{l | l l l}
+n & summe & i & anzahl \\
+\hline
+0 & 0 & 1000 & 0 \\
+1 & 1000.0 & 1000.01 & 1 \\
+2 & 2000.01 & 1000.02 & 2 \\
+3 & 3000.03 & 1000.03 & 3 \\
+4 & \textbf{4000.06} & 1000.04 & 4 \\
+\end{tabular}
+\end{table}
+
+\subsection{c) Analysieren Sie das Programm mit dem GDB }
+
+\subsubsection{Berechnet die Schleife das korrekte Ergebnis?}
+Nein, wie oben beschrieben weicht das Ergebnis von dem erwarteten Ergebnis ab.
+
+\subsubsection{Welche Werte nehmen die Variablen bei der Ausführung des Programms an?}
+Um die Werte über die verschiedenen Schleifendurchläufe hinweg verfolgen zu können, wird als erstes ein Breakpoint für den Kopf der Schleife Gesetzt.
+
+
+\subsubsection{Warum wird das falsche Ergebnis berechnet?}
+
+\subsubsection{Erstellen Sie ein modifiziertes Programm, welches ein korrektes Ergebnis liefert.}
 
 
 \newpage

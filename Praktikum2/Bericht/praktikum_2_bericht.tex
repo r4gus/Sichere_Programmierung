@@ -544,6 +544,16 @@ Um die Werte über die verschiedenen Schleifendurchläufe hinweg verfolgen zu k�
 % ****************************************************************************
 \section{Zu Aufgabe 5: Binäre Suche}
 % ****************************************************************************
+
+\subsection{Kurze Erklärung von binary-search}
+
+Der binary-search Algorithmus wird verwendet um ein Element in einer sortierten Liste zu finden.
+Binary search hat den Vorteil gegenüber Iterativer Suche, dass es $O(log N)$ Laufzeit statt $O(N)$ hat.
+Der Algorithmus teilt das Feld in zwei Teile an. Danach wird geschaut, ob das in welchen der beiden Felder das zu suchende
+Element ist oder ob es genau in der Mitte ist. Das Einteilen ist möglich, da das Feld sortiert ist. 
+Dies wird rekursiv auf dem neuen Teil des Feldes ausgeführt, bis das Feld Element gefunden wurde. 
+Spätestens, wenn es nur noch das Teilfeld nur noch größe 1 hat.
+
 \subsection{a) Analyse des C-Codes}
 \textit{gdb-uebung-5.c}
 

@@ -7,8 +7,12 @@ int rekursionstiefe = 0;
 
 int binarysearch(int zahl, int links, int rechts) {
     rekursionstiefe++;
+    
     int mitte = (links + rechts) / 2;
-    printf("\nRekursionstiefe: %d", rekursionstiefe);
+    if(rekursionstiefe < 11 || rekursionstiefe > 174520)
+    	printf("\nRekursionstiefe: %d", rekursionstiefe);
+    if (rekursionstiefe == 60)
+    	printf("\n...");
     if (array[mitte] == zahl)
         return mitte; 
     if (links == rechts)

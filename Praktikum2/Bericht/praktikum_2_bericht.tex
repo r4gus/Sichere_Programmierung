@@ -558,10 +558,44 @@ Spätestens, wenn es nur noch das Teilfeld nur noch größe 1 hat.
 \textit{gdb-uebung-5.c}
 
 \lstinputlisting{../gdb-uebung-5.c}
-...
+
+Das Programm besitzt drei globale Variablen. Die Größe \texttt{MAX} des arrays, ein sortiertes \texttt{array} mit bereits initialisierten Werten und ein int, der die \texttt{rekursionstiefe speichert}.
+
+Zusätzlich zur \texttt{main} Funcktion, gibt es die \texttt{binarysearch} Funktion. Diese ist die Funktion, die durch rekursive Aufrufevon sich selbst den oben beschriebenen Algorithmus durchführt.
+
+In der \texttt{main} Funktion wird eine Schnitstele zum benurtzer geboten. Dieser kann beim Aufruf des Programms eine Zahl als Argument mit angeben. Diese Zahl wird dann gesucht und der Index in einem formatiertenString in der Konsole ausgegeben. Wurde die Zahl nicht gefunden, wird dies in einer alternativen Ausgabe ausgegeben. 
 
 \subsection{b) Ausführen des Programms}
-...
+
+Wird das Programm nun kompiliert und probeweise mit Eingaben ausgeführt erhalten wir zum Beispeil folgende Ausgaben.
+
+\imageseriesExcercise{5}{b}{1}
+
+Durch nachzählen kann auch schnell überprüft werden, das die Indizes stimmen.
+
+\imageseriesExcercise{5}{b}{2}
+
+Wird das Programm nun allerdings mit einem Wert aufgerufen, der nicht im Array steht, terminiert die Rekursion nie. Das Programm bricht mit einem Segmentation fault ab. 
+
+\subsubsection{Segmentation fault (core dumped)}
+Segmentation fault heißt, der Prozess versucht auf Speicher zuzugreifen, auf den er kein Zugriff hat. In unserem Fall ist die Ursache ein \texttt{Stackoverflow}. Wie in vorherigen Aufgaben schon festgestellt, wird bei jedem Funktionsaufruf ein Stackframe auf dem Stack angelegt. Dieser Speicher wird erst wieder frei, wenn die Funktion \"fertig\" ist. Das heißt bei jedem rekursiven Funktionsaufruf wird ein neuer Stackframe auf dem dem Stack gespeichert. Der verfügbare Speicher des Stacks is begrenzt. Ist dieser aufgebraucht (Grenze vom Stack ist an der Grenze des Heaps), und es wird versucht was auf dem Stack abzulegen, kommt es zum \texttt{Stackoverflow} was zum \texttt{segmentation fault} führt und den Prozess beendet. Dies verhindert, das der Stack speicher im Heap überschreibt.   
+
+\imageseriesExcercise{5}{b}{3}
+
+Bei einer Eingabe andreren tritt das selbe Problem auf. Die Rekursion terminiert wieder nicht. Diesmal ist die gesuchte Zahl allerdings im Array. Das heißt wir haben einen weiteren Defekt im Programm. Die Besonderheit bei dieser Zah ist, dass sie an der letzten Stelle im Array steht. Vielleicht kann man hier mit der Fehlersuche anfangen.
+
+\subsubsection{Schlussfolgerung}
+
+\begin{itemize}
+\item Es gab Eingaben bei denen die Ausgabe korrekt war. All diese Eingaben kamen im Array vor.
+\item Wenn die Zahl nicht im Array vorkommt kann es zu einem Fehler kommen. Es muss noch getestet werden, ob dieser Fehler bei jeder Zahl auftritt, die nicht im Array steht.
+\item Es kam zu einem Fehler obwohl die eingegebene Zahl im Array steht.
+\item -> Um den Fehler zu finden, kann man das Programm debuggen um den Defekt zu finden.
+\end{itemize}
+
+
+
+
 
 
 \subsection{c) Ausführen des Programms in gdb}

@@ -2,8 +2,8 @@
 
 int main() {
     int anzahl;
-    float summe;
-    float i;
+    double summe;
+    double i;
 
     summe = 0, anzahl = 0;
     for (i = 1000; i <= 1000.03; i += .01) {

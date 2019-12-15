@@ -389,7 +389,13 @@ Das Programm wird nun bei maximaler Tiefe \textbf{t = 6}, der Funktionsaufrufe a
 \subsubsection{Wie ist der Inhalt dieser Stack Frames?}
 Die Werte der Rücksprungadressen, Frame und Stack Pointer sind aufgrund von \textbf{Address Space Layout Randomisation (ASLR)} immer unterschiedlich (bis auf die letzten 12 Bit), deshalb werden im Anschluss relative Adressen angegeben.
 
-Main als auch f() allozieren für sich jedes mal 16 Byte auf dem Stack. f() speichert dann den übergebenen Wert direkt unter dem gespeicherten Frame Pointer. Am Schluss wird das berechnete Ergebnis in main(), auf den Stack an Stelle rbp-0x8 geschrieben (rote Markierung).
+Main als auch f() allozieren für sich jedes mal 16 Byte auf dem Stack. 
+\begin{lstlisting}
+MOV rbp, rsp
+SUB rsp, 0x10	// allocate 16 bytes on the heap
+\end{lstlisting}
+
+f() speichert dann den übergebenen Wert direkt unter dem gespeicherten Frame Pointer. Am Schluss wird das berechnete Ergebnis in main(), auf den Stack an Stelle rbp-0x8 geschrieben (rote Markierung \ref{fig:recursive3} in main).
 
 \begin{center}
 \begin{figure}[H]
@@ -532,12 +538,234 @@ n & summe & i & anzahl \\
 Nein, wie oben beschrieben weicht das Ergebnis von dem erwarteten Ergebnis ab.
 
 \subsubsection{Welche Werte nehmen die Variablen bei der Ausführung des Programms an?}
-Um die Werte über die verschiedenen Schleifendurchläufe hinweg verfolgen zu können, wird als erstes ein Breakpoint für den Kopf der Schleife Gesetzt.
+Das das Programm mit Floatingpoint-Zahlen rechnet gilt es als erstes einige Befehle zu erläutern, die das Programm in diesem Fall nutzt und die nur auf diesem Datentyp operieren.
 
+\subsubsection*{Floating Point Instruktionen}
+\begin{description}
+	\item [xmm0-15] - Floating Point Register
+
+	\item [movss <dest>, <src>] - Kopiert einen 32-Bit Quell-Operanden in einen 32-Bit Ziel-Operanden.
+
+	\item [movsd <dest>, <src>] - Kopiert einen 64-Bit Quell-Operanden in einen 64-Bit Ziel-Operanden.
+
+	\item [cvtsd2ss <dest>, <src>] - Wandelt einen 64-Bit FP Quell-Operanden in einen 32-Bit FP Zahl um und kopiert sie nach <dest>.
+
+	\item [cvtss2sd <dest>, <src>] - Wandelt einen 32-Bit FP Quell-Operanden in einen 64-Bit FP Zahl um und kopiert sie nach <dest>.
+
+	\item [addss <dest>, <src>] - <32-Bit dest> := <32-Bit dest> + <32-Bit src>
+
+	\item [addsd <dest>, <src>] - <64-Bit dest> := <64-Bit dest> + <32-Bit src>
+
+	\item [ucomisd <RXsrc>, <src>] - Vergleich der beiden 64-Bit FP Register <RXsrc> und <src>. Ein Operand kann auch eine Speicheradresse sein.
+\end{description}
+
+
+\subsubsection*{Analyse}
+Um die Werte über die verschiedenen Schleifendurchläufe hinweg verfolgen zu können, muss als ersten ein Breakpoint an den Kopf der Schelife gestzt werden. Dafür gilt es den Kopf der Schleife mittels \textbf{GDB} zu ermittlen.
+
+Da sich der komplette Programmcode in \textbf{main()} befindet, wird diese Funktion auch disassembliert.
+\begin{lstlisting}
+gef> disass main
+
+   <+0>:	push   rbp
+   <+1>:	mov    rbp,rsp
+   <+4>:	sub    rsp,0x10
+   <+8>:	pxor   xmm0,xmm0
+   <+12>:	movss  DWORD PTR [rbp-0x8],xmm0
+   <+17>:	mov    DWORD PTR [rbp-0xc],0x0
+   <+24>:	movss  xmm0,DWORD PTR [rip+0x116]        # 0x780
+   <+32>:	movss  DWORD PTR [rbp-0x4],xmm0
+   <+37>:	jmp    0x69e <main+84>
+   <+39>:	movss  xmm0,DWORD PTR [rbp-0x8]
+   <+44>:	addss  xmm0,DWORD PTR [rbp-0x4]
+   <+49>:	movss  DWORD PTR [rbp-0x8],xmm0
+   <+54>:	add    DWORD PTR [rbp-0xc],0x1
+   <+58>:	cvtss2sd xmm0,DWORD PTR [rbp-0x4]
+   <+63>:	movsd  xmm1,QWORD PTR [rip+0xf7]        # 0x788
+   <+71>:	addsd  xmm0,xmm1
+   <+75>:	cvtsd2ss xmm2,xmm0
+   <+79>:	movss  DWORD PTR [rbp-0x4],xmm2
+   <+84>:	cvtss2sd xmm0,DWORD PTR [rbp-0x4]
+   <+89>:	movsd  xmm1,QWORD PTR [rip+0xe5]        # 0x790
+   <+97>:	ucomisd xmm1,xmm0
+   <+101>:	jae    0x671 <main+39>
+   <+103>:	cvtss2sd xmm0,DWORD PTR [rbp-0x8]
+   <+108>:	mov    eax,DWORD PTR [rbp-0xc]
+   <+111>:	mov    esi,eax
+   <+113>:	lea    rdi,[rip+0xa6]        # 0x768
+   <+120>:	mov    eax,0x1
+   <+125>:	call   0x520 <printf@plt>
+   <+130>:	mov    eax,0x0
+   <+135>:	leave
+   <+136>:	ret
+\end{lstlisting}
+Danach muss die Abfolge von Instruktionen, die nun erscheint, auf Instruktionsblöcke hin abgesucht werden, die auf genau so einen Kopf schließen lassen. Gleichzeitig können einzelne Speicheradressen und Register, durch Analyse genau dieser Adressen, den passenden Variablen im Quelltext zugeordnet werden. Dies hilft, den Code besser verstehen und vergleichen zu können.
+
+Bei <main + 12> wird der 32-Bit FP Wert 0 aus Register \textbf{xmm0} an Adress \textbf{rbp-0x8} copiert. Da es nur ein FP Variable im Quelltext gibt, die mit 0 initialisiert wird, fällt die Zuordnung in diesem Fall leicht. Es muss sich bei der Speicheradress rbp-0x8 um die Variable \textbf{summe} handeln.
+\begin{lstlisting}
+<+12>:	movss  DWORD PTR [rbp-0x8],xmm0		; summe := 0
+\end{lstlisting}
+
+Ähnlich verhällt es sich hier mit der darauf folgenden Zeile. Da bis auf eine Ausnahme mit FP Zahlen gerechnet wird, muss es sich bei Instruktion <main + 17> um die Initialisierung der Integer-Variable \textbf{anzahl} mit 0 handeln.
+\begin{lstlisting}
+<+17>:	mov    DWORD PTR [rbp-0xc],0x0		; anzahl := 0
+\end{lstlisting}
+
+Daraufhin wird der Wert an Adresse \textbf{rip+0x116} in xmm0 kopiert und danach gleich wieder an Adresse \textbf{rbp-0x4} geschrieben. Da mit rip+0x116 die Adresse relativ zum Instruktions-Pointer angegeben wird, kann davon ausgegangen werden, dass der Wert in der schreibgeschützten \textbf{Text-Section} befindet. Damit muss es sich hierbei um eine Konstante handeln. Die Konstanten, die in dem gegebenen Programm vorkommen sind \texttt{1000, 1000.03 und 0.01}.
+\begin{lstlisting}
+<+24>:	movss  xmm0,DWORD PTR [rip+0x116]
+<+32>:	movss  DWORD PTR [rbp-0x4],xmm0
+\end{lstlisting}
+Um den exakten Wert zu erhalten und damit eine Zuordnung vornehmen zu können gilt es die Speicheradresse zu inspizieren. Dabei wird die \textbf{f Option} gewählt, da es sich mit hoher Wahrscheinlichkeit um ein FP Zahl an der zu inspizierenden Adresse handelt.
+\begin{lstlisting}
+gef> x/f 0x780
+0x780:	1000
+\end{lstlisting}
+Und tatsächlich scheint es sich bei den Instruktionen um die Initialisierung von \textbf{i} mit dem Wert 1000.0 zu handeln.
+
+\textbf{Zuordnung}
+\begin{itemize}
+	\item anzahl = rbp-0xc	(32-Bit int)
+	\item summe  = rbp-0x8	(32-Bit float)
+	\item i	     = rbp-0x4	(32-Bit float)
+\end{itemize}
+
+Mit dieser Zuordnung ist nun klar, welche Adressen im Speicher (Variablen) es zu beobachten gilt.
+
+Nun gilt es noch den Kopf der Schleif ausfindig zu machen. Die Instruktion an Stelle <main + 37> springt an Adresse <main + 84>. Hier wird als erstes die 32-Bit FP Zahl \textbf{i} in eine 64-Bit FP Zahl umgewandelt und nach xmm0 kopiert. Danach wird die Konstante 1000.03 in xmm1 copiert. xmm0 und xmm1 werden daraufhin verglichen und falls 1000.03>= i ist, wird an die Stelle <main + 39> gesprungen.
+\begin{lstlisting}
+<+84>:	cvtss2sd xmm0,DWORD PTR [rbp-0x4]	; xmm0 := i
+<+89>:	movsd  xmm1,QWORD PTR [rip+0xe5]	; xmm1 := 1000.03
+<+97>:	ucomisd xmm1,xmm0			; while 1000.03 >= i:
+<+101>:	jae    0x671 <main+39>			;	...
+\end{lstlisting}
+Damit ist der Kopf der Schleife Gefunden. Nun kann ein Breakpoint an Stelle <main+84>, d.h. Adresse 0x69e gestzt werden. Dazu wird als erstes ein Breakpoint an den Anfang von main() gesetzt und das Programm gestartet.
+\begin{lstlisting}
+gef> break main
+gef> r
+\end{lstlisting}
+Der Prozess wird nun gleich nach dem Function Prologue \ref{lst:epipro} angehalten. 
+
+\imageseriesExcercise{4}{c}{0}
+
+Mit \textbf{disass main} können nun noch einmal alle Instruktionen angezeigt werden. Diesmal enthällt jede Spalte jedoch zusätzlich noch die jeweilige Adresse im Speicher. Diese können wir nun Nutzen um den Breakpoint an den Schleifenkopf zu setzen. Außerdem wird noch ein Breakpoint hinter die \textbf{jae} Instruktion gesetzt, damit sich das Programm nich sofort, nach dem letzten Schleifendurchlauf beendet. Mit \textbf{continue} wird der Prozess danach bis zum nächsten Breakpoint fortgesetzt.
+\begin{lstlisting}
+gef> break *0x000055555555469e		; address can differ
+gef> break *0x00005555555546b1
+gef> c
+\end{lstlisting}
+
+\imageseriesExcercise{4}{c}{1}
+
+Um die Werte der einzelnen Variablen abzufragen, kann wieder der \textbf{x} (examine) Befehl verwendet werden. Zum 0'ten Schleifendurchlauf halten die Variablen \textbf{anzahl, summe, i} folgende Werte.
+
+\begin{lstlisting}
+gef> x/d $rbp-0xc
+0x7fffffffe7d4:	0	; anzahl
+gef> x/f $rbp-0x8
+0x7fffffffe7d8:	0	; summe
+gef> x/f $rbp-0x4
+0x7fffffffe7dc:	1000	; i
+gef> c
+\end{lstlisting}
+
+Nach dem 1'ten Schleifendurchlauf halten die Variablen \textbf{anzahl, summe, i} folgende Werte. Hier fällt bei \textbf{i} auf, dass nicht wie erwartet exakt 0.01 zu i addiert wurde, sondern eine leicht höhere Zahl. D.h. die Addition der FP Zahl 0.01 zu i stellt einen Defekt in dem gegebenen Programm dar. Durch diesen wurde die Variable i infiziert.
+
+\begin{lstlisting}
+gef> x/d $rbp-0xc
+0x7fffffffe7d4:	1	; anzahl
+gef> x/f $rbp-0x8
+0x7fffffffe7d8:	1000	; summe
+gef> x/f $rbp-0x4
+0x7fffffffe7dc:	1000.01001	; i
+gef> c
+\end{lstlisting}
+
+Nach dem 2'ten Schleifendurchlauf halten die Variablen \textbf{anzahl, summe, i} folgende Werte. Auch hier verschlimmert sich die Infektion, d.h. i weicht noch mehr vom zu erwartenden Wert ab.
+
+\begin{lstlisting}
+gef> x/d $rbp-0xc
+0x7fffffffe7d4:	2	; anzahl
+gef> x/f $rbp-0x8
+0x7fffffffe7d8:	2000.01001	; summe
+gef> x/f $rbp-0x4
+0x7fffffffe7dc:	1000.02002	; i
+gef> c
+\end{lstlisting}
+
+Nach dem 3'ten Schleifendurchlauf halten die Variablen \textbf{anzahl, summe, i} folgende Werte.
+
+\begin{lstlisting}
+gef> x/d $rbp-0xc
+0x7fffffffe7d4:	3	; anzahl
+gef> x/f $rbp-0x8
+0x7fffffffe7d8:	3000.03003	; summe
+gef> x/f $rbp-0x4
+0x7fffffffe7dc:	1000.03003	; i
+gef> c
+\end{lstlisting}
+
+Nach dem 3'ten Schleifendurchlauf kommt es zu einem Abbruch der Schleife, da die Bedingung nicht mehr erfüllt ist, d.h. $ i = 1000.03003 \nleq 1000.03 $. Was wiederrum zu dem Fehlverhalten des Programms führt.
 
 \subsubsection{Warum wird das falsche Ergebnis berechnet?}
+Computer haben ein großes Problem, wenn es um die Darstellung von Fließkommazahlen geht. Dazu kann man sich folgende Frage Stellen. Man nehme zwei Zahlen, n = 0.0000001 und m = 0.0000002. \textbf{wie viele Zahlen liegen zwischen n und m?}. Die Antwort ist weniger überraschend, nämlich \textbf{unendlich viele}. Dies gilt natürlich für zwei beliebige Reelle Zahlen n und m, zeigt aber das Problem der Endlichkeit von Computern. 
+
+Das Programm nutzt z.B. 32-Bit Floating Point Zahlen. Wenn man vom IEE 754 FP Standard ausgeht, bedeutet das, dass 23 Bit für die Darstellung einer Kommazahl zur verfügung stehen, plus 9-Bit für Exponent und Vorzeichen. Damit können natürlich nicht unendlich viele reelle Zahlen dargestellt werden. Zahlen werden \textbf{näherungsweise} dargestellt, d.h. anstelle der eigentlichen Zahl wird die nächstmögliche Zahl verwendet, die darstellbar ist. Dabei ist die Wertigkeit der einzelnen Stellen zu berücksichtigen.
+
+\subsubsection*{Wertigkeit der Stellen zur Basis 2}
+\begin{table}[H]
+\begin{tabular}{c c c c c c c}
+	... & $ 2^{2}$ & $ 2^{1} $ & $ 2^{0} $ & $ 2^{-1} $ & $ 2^{-2} $ & ... \\
+	... & 4 & 2 & 1 & 0.5 & 0.25 & ... \\
+\end{tabular}
+\end{table}
+
+
+Um die näherungsweise Darstellung zu illustrieren kann von einem vereinfachten Beispiel mit Festkommazahl ausgegangen werden.
+
+\subsubsection*{Beispiel}
+\begin{itemize}
+	\item Sei R 8-Bit Register mit 1 Vorkomma- und 7 Nachkommastellen ohne Vorzeichen.
+	\item D.h. $ R = V.NNNNNNN $
+	\item Speichere 0.1 binär in Register R.
+	\item dann ergibt sich die näherungsweise Darstellung \textbf{$0.0001100_{2} = 0.09375_{10}$}
+	\item d.h. die Zahl die sich darstellen lässt und am nähesten an 0.1 liegt.
+\end{itemize}
+
+Das flasche Ergebnis wird berechnet, da sich 0.01 nicht exakt mit 32-Bit darstellen lässt. Anstelle von 0.01 wird der nächstmögliche darstellbare Wert verwendet. Dieser ist jedoch um 0.00001 größer als 0.01, wodurch die Schleife zu früh terminiert, was wiederrum zu dem auftretenden Fehler führt.
 
 \subsubsection{Erstellen Sie ein modifiziertes Programm, welches ein korrektes Ergebnis liefert.}
+In Schleifen mit FP Zahlen zu hantieren ist so gut wie immer eine schlechte Idee und sollte um jeden Preis vermieden werden. Dieses kleine Programm unterstützt diese These weiter. Trotzallem stellt die Verwendung von 64-Bit Double Precision FP Zahlen (double) anstelle von float, einen hinreichenden Bug-Fix dar.
+
+\newpage
+\subsubsection*{Code}
+\begin{lstlisting}
+#include <stdio.h>
+
+int main() {
+	int anzahl;
+	double summe;	// BUGFIX
+	double i;	// BUGFIX
+
+	summe = 0, anzahl = 0;
+	for (i = 1000; i <= 1000.03; i += .01) {
+		summe += i;
+		anzahl++;
+	}
+	printf("Summe: %f, Anzahl: %d\n", summe, anzahl);
+
+	return 0;
+}
+\end{lstlisting}
+
+\subsubsection*{Ergebnis}
+\begin{lstlisting}
+$ ./gdb-uebung-4
+Summe: 4000.060000, Anzahl: 4
+\end{lstlisting}
+
+
+	
 
 
 \newpage

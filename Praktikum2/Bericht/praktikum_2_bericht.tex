@@ -822,16 +822,46 @@ Bei einer Eingabe andreren tritt das selbe Problem auf. Die Rekursion terminiert
 \end{itemize}
 
 
-
-
-
-
 \subsection{c) Ausführen des Programms in gdb}
-...
+
+Es soll nun der Fehler durch debuggen des Programms in gdb gefunden werden. Hierfür wird das Programm mit debug Informationen kompiliert und in gdb gestartet.
+
+\imageseriesExcercise{5}{c}{1}
+
+Als erstes wird das Programm mit der Eingabe 27 getestet. Diese ist nicht im Array vorhanden und es sollte -1 zurück gegeben werden. Stattdessen terminiert die Rekursion aber nicht in in der vorherigen Aufgabe festgestellt wurde.
+
+\imageseriesExcercise{5}{c}{2}
+
+Als erstes wird anhand der Werte die in \texttt{links, rechts, mitte} stehen, versucht den Fehler zu finden. Der Grund ist, das die Rekursion beenden müsste, wenn \texttt{links == rechts} ist. Dieser Fall tritt nicht ein also wird geschaut was statt dessen eintritt. Hierfür wird eine Tabelle erstellt, für die in jeder Rekursionsstufe die Werte der Variablen eingetragen werden (nach der berechnung von \texttt{mitte}).
+Um die Werte schnell rauslesen zu können, wird das Programm bis nach der berechnung mit \textit{n (next)} ausgeführt. Hier wird ein Breakpoint gesetzt und es kann mit \textit{c (continue)} bis zu diesem Breakpoint ausgeführt werden. 
+
+\imageseriesExcercise{5}{c}{3}
+
+\"gef\" zeigt jetzt die jeweilgen Werte der Variablen an den entsprechenden Stellen an. \texttt{mitte} direkt im source code über der nächsten Abfrage. \texttt{links und rechts} im trace wo die Funktionsaufrufe mit den jeweiligen Werten angezeigt werden. Der Wert \texttt{array[mitte]} kann händisch aus dem Array ausgelen werden oder in gdb mit \texttt{x/x array + mitte}
+
+\begin{tabular}{c | c | c | c | c | c}
+Rekursionsstufe & links & mitte & rechts & array[mitte] & zahl\\
+\hline
+1 & 0x0 & 0x3 & 0x7 & 0x12 & 0x1b \\
+2 & 0x3 & 0x5 & 0x7 & 0x1f & 0x1b \\
+3 & 0x3 & 0x4 & 0x5 & 0x1a & 0x1b \\
+4 & 0x4 & 0x4 & 0x5 & 0x1a & 0x1b \\
+5 & 0x4 & 0x4 & 0x5 & 0x1a & 0x1b \\
+\end{tabular}
+
+Da zwischen die Werte im 4. und 5. Schritt gleich sind kann gestoppt werden. Ab hier werden sich die Funktion immer mit denselben Werten wieder selbst aufrufen. Das heißt die Rekursion terminiert nicht, da hier der Wert \texttt{rechts} immer eins größer ist als \texttt{links}. Aus der Tabelle kann jetzt auch leicht rausgelesen werden, welcher Zweig der if-Bedingung genommen wurde um die Funktion erneut aufzurufen.
+Da \texttt{array[mitte] < zahl} muss es der else Zweig sein. Es könnte also sein, das an dieser Stelle ein Fehler vorliegt.
+% TODO Herleitung auf Fehler weiter beschreiben
+
+
 
 \subsection{d) Beheben des Fehlers}
-...
 
+Um den Fehler zu behebn, muss in Zeile 19, im else Teil also \texttt{mitte + 1} statt \texttt{mitte} übergeben werden.
+
+\textit{gdb-uebung-5-bugfix.c}
+\lstinputlisting{../gdb-uebung-5-bugfix.c}
+% TODO: ganzer Code oder nur BUGFIX?
 
 \end{document}
 

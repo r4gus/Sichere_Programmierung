@@ -851,7 +851,16 @@ Rekursionsstufe & links & mitte & rechts & array[mitte] & zahl\\
 
 Da zwischen die Werte im 4. und 5. Schritt gleich sind kann gestoppt werden. Ab hier werden sich die Funktion immer mit denselben Werten wieder selbst aufrufen. Das heißt die Rekursion terminiert nicht, da hier der Wert \texttt{rechts} immer eins größer ist als \texttt{links}. Aus der Tabelle kann jetzt auch leicht rausgelesen werden, welcher Zweig der if-Bedingung genommen wurde um die Funktion erneut aufzurufen.
 Da \texttt{array[mitte] < zahl} muss es der else Zweig sein. Es könnte also sein, das an dieser Stelle ein Fehler vorliegt.
-% TODO Herleitung auf Fehler weiter beschreiben
+Schaut man sich den Aufruf an sieht man, das der jetzige \texttt{mitte} Wert der neue \texttt{links} Wert im nächsten Funktionsaufruf ist. Der \texttt{rechts} Wert wird übernommen. Also kann der Fehler daran liegen, wie die Grenzen übergeben werden. Schaut man sich die Berechnung für den Wert der \texttt{mitte} an stellt man fest, das hier ein int durch zwei geteilt wird und wider in einem int gespeichert wird. Das heißt bei geraden Werten, ist die Division Verlustfrei allerdings bei ungeraden Werten wird immer etwas abgeschnitten. Dadurch entsteht das Problem, es passieren kann, dass \texttt{links} nie gelich \texttt{rechts} ist. Z.B gilt im Moment folgende Rechnung: $(5 + 4)/2 = 4$ Um eine Terminierung zu erzeugen müsste allerdings gelten: $(5 + 4)/2 = 5$. Um diesen Wert um eins zu erhöhen, kann man im Aufruf der Funktion den Wert von \texttt{mitte} um eins erhöhen. Damit verhindert man diesen Sonderfall.
+
+Zusammenfassung:
+
+\begin{itemize}
+\item Das Problem ist die Berechnung der \texttt{mitte}
+\item Dieses Problem wirkt sich beim Aufruf der Funktion so aus, dass bestimmte Werte nie erreicht werden
+\item Dadurch terminiert die Rekursion nicht
+\item Das Programm bricht ab, wenn versucht wird die Funktion aufzurufen es aber keinen Platz mehr auf dem Stack gibt
+\end{itemize}
 
 
 

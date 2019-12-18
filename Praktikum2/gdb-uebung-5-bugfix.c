@@ -16,7 +16,7 @@ int binarysearch(int zahl, int links, int rechts) {
     if (array[mitte] > zahl)
         return binarysearch(zahl, links, mitte); 
     else
-        return binarysearch(zahl, mitte, rechts);
+        return binarysearch(zahl, mitte + 1, rechts);
 }
 
 int main(int argc, char *argv[]) {

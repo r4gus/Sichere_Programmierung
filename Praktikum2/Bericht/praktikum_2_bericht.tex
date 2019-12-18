@@ -829,16 +829,55 @@ Bei einer Eingabe andreren tritt das selbe Problem auf. Die Rekursion terminiert
 \end{itemize}
 
 
-
-
-
-
 \subsection{c) Ausführen des Programms in gdb}
-...
+
+Es soll nun der Fehler durch debuggen des Programms in gdb gefunden werden. Hierfür wird das Programm mit debug Informationen kompiliert und in gdb gestartet.
+
+\imageseriesExcercise{5}{c}{1}
+
+Als erstes wird das Programm mit der Eingabe 27 getestet. Diese ist nicht im Array vorhanden und es sollte -1 zurück gegeben werden. Stattdessen terminiert die Rekursion aber nicht in in der vorherigen Aufgabe festgestellt wurde.
+
+\imageseriesExcercise{5}{c}{2}
+
+Als erstes wird anhand der Werte die in \texttt{links, rechts, mitte} stehen, versucht den Fehler zu finden. Der Grund ist, das die Rekursion beenden müsste, wenn \texttt{links == rechts} ist. Dieser Fall tritt nicht ein also wird geschaut was statt dessen eintritt. Hierfür wird eine Tabelle erstellt, für die in jeder Rekursionsstufe die Werte der Variablen eingetragen werden (nach der berechnung von \texttt{mitte}).
+Um die Werte schnell rauslesen zu können, wird das Programm bis nach der berechnung mit \textit{n (next)} ausgeführt. Hier wird ein Breakpoint gesetzt und es kann mit \textit{c (continue)} bis zu diesem Breakpoint ausgeführt werden. 
+
+\imageseriesExcercise{5}{c}{3}
+
+\"gef\" zeigt jetzt die jeweilgen Werte der Variablen an den entsprechenden Stellen an. \texttt{mitte} direkt im source code über der nächsten Abfrage. \texttt{links und rechts} im trace wo die Funktionsaufrufe mit den jeweiligen Werten angezeigt werden. Der Wert \texttt{array[mitte]} kann händisch aus dem Array ausgelen werden oder in gdb mit \texttt{x/x array + mitte}
+
+\begin{tabular}{c | c | c | c | c | c}
+Rekursionsstufe & links & mitte & rechts & array[mitte] & zahl\\
+\hline
+1 & 0x0 & 0x3 & 0x7 & 0x12 & 0x1b \\
+2 & 0x3 & 0x5 & 0x7 & 0x1f & 0x1b \\
+3 & 0x3 & 0x4 & 0x5 & 0x1a & 0x1b \\
+4 & 0x4 & 0x4 & 0x5 & 0x1a & 0x1b \\
+5 & 0x4 & 0x4 & 0x5 & 0x1a & 0x1b \\
+\end{tabular}
+
+Da zwischen die Werte im 4. und 5. Schritt gleich sind kann gestoppt werden. Ab hier werden sich die Funktion immer mit denselben Werten wieder selbst aufrufen. Das heißt die Rekursion terminiert nicht, da hier der Wert \texttt{rechts} immer eins größer ist als \texttt{links}. Aus der Tabelle kann jetzt auch leicht rausgelesen werden, welcher Zweig der if-Bedingung genommen wurde um die Funktion erneut aufzurufen.
+Da \texttt{array[mitte] < zahl} muss es der else Zweig sein. Es könnte also sein, das an dieser Stelle ein Fehler vorliegt.
+Schaut man sich den Aufruf an sieht man, das der jetzige \texttt{mitte} Wert der neue \texttt{links} Wert im nächsten Funktionsaufruf ist. Der \texttt{rechts} Wert wird übernommen. Also kann der Fehler daran liegen, wie die Grenzen übergeben werden. Schaut man sich die Berechnung für den Wert der \texttt{mitte} an stellt man fest, das hier ein int durch zwei geteilt wird und wider in einem int gespeichert wird. Das heißt bei geraden Werten, ist die Division Verlustfrei allerdings bei ungeraden Werten wird immer etwas abgeschnitten. Dadurch entsteht das Problem, es passieren kann, dass \texttt{links} nie gelich \texttt{rechts} ist. Z.B gilt im Moment folgende Rechnung: $(5 + 4)/2 = 4$ Um eine Terminierung zu erzeugen müsste allerdings gelten: $(5 + 4)/2 = 5$. Um diesen Wert um eins zu erhöhen, kann man im Aufruf der Funktion den Wert von \texttt{mitte} um eins erhöhen. Damit verhindert man diesen Sonderfall.
+
+Zusammenfassung:
+
+\begin{itemize}
+\item Das Problem ist die Berechnung der \texttt{mitte}
+\item Dieses Problem wirkt sich beim Aufruf der Funktion so aus, dass bestimmte Werte nie erreicht werden
+\item Dadurch terminiert die Rekursion nicht
+\item Das Programm bricht ab, wenn versucht wird die Funktion aufzurufen es aber keinen Platz mehr auf dem Stack gibt
+\end{itemize}
+
+
 
 \subsection{d) Beheben des Fehlers}
-...
 
+Um den Fehler zu behebn, muss in Zeile 19, im else Teil also \texttt{mitte + 1} statt \texttt{mitte} übergeben werden.
+
+\textit{gdb-uebung-5-bugfix.c}
+\lstinputlisting{../gdb-uebung-5-bugfix.c}
+% TODO: ganzer Code oder nur BUGFIX?
 
 \end{document}
 

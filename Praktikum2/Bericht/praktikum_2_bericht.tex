@@ -65,7 +65,53 @@
 % ****************************************************************************
 \section{Einleitung}
 % ****************************************************************************
-Programmiersprachen bzw. Programme zu verstehen geht weit über eine Kenntnis der Syntax und Konventionen hinaus. Hinter jedem Programm, ob Kernel, Dämon oder Nutzer-Programm, versteckt sich eine Abfolge von Maschineninstruktionen, die von ihrem Aufbau kaum noch Ähnlichkeit mit der High-Level-Programmiersprache haben, mit der das jeweilige Programm geschrieben wurde. Dieses tiefere Verständniss zu erlangen, war Zierl dieses Praktikums.
+Programmiersprachen bzw. Programme zu verstehen geht weit über eine Kenntnis der Syntax und Konventionen hinaus. Hinter jedem Programm, ob Kernel, Dämon oder Nutzer-Programm, versteckt sich eine Abfolge von Maschineninstruktionen, die von ihrem Aufbau kaum noch Ähnlichkeit mit der High-Level-Programmiersprache haben, mit der das jeweilige Programm geschrieben wurde. Dieses tiefere Verständniss zu erlangen, war Ziel dieses Praktikums.
+
+\subsection{Environment}
+\begin{table}[H]
+\begin{tabular}{l | r}
+	\textbf{Betriebssystem} & Linux 64-Bit \\
+	\textbf{Debugger} & GDB mit \href{https://github.com/hugsy/gef}{gef} Extension \\
+\end{tabular}
+\end{table}
+
+\subsection{Befehle}
+Bei der Analyse der Binärdateien mit GDB wurden u.a. folgende Befehlen verwendet.
+\begin{description}
+	\item [break/b \{*<addr>|<line>|<function>\}]\hfill \\
+		Setze eine Breakpoint an der angegebenen Stelle. Wird keine Position angegeben, wird der aktuelle Wert des Instruction-Pointer verwendet.
+	\item [run/ r <arg1> <arg2> ...]\hfill \\
+		Starte das Programm mit den angegebenen Argumenten.
+	\item [disassemble/ disass <function>]\hfill \\
+		Disassembliere die angegebene Funktion.
+	\item [ next/ n]\hfill \\
+		Springe zur nächsten Instruktion. Betrete keine Unterprogramme.
+	\item [ step/ s]\hfill \\
+		Springe zur nächsten Instruktion. Betrete Unterprogramm falls nächste Instruktion Unterprogrammaufruf.
+	\item [ x/{length}{format}{size} <address>]\hfill \\
+		Untersuche length Werte an der angegebenen Adresse, interpretiert als format der Größe size.
+		\begin{itemize}
+		\item format
+		\begin{itemize}
+			\item o - ocatal
+			\item x - hexadecimal
+			\item d - decimal
+			\item s - string
+			\item f - float
+			\item ...
+		\end{itemize}
+		\item size
+		\begin{itemize}
+			\item b - byte - 8 Bit
+			\item h - half word - 16 Bit
+			\item w - word - 32 Bit
+			\item g - giant - 64 Bit
+		\end{itemize}
+		\item length - x e [1..n]
+
+		\end{itemize}
+
+\end{description}
 
 
 
@@ -318,7 +364,7 @@ unsigned int f(unsigned int i) {
 \caption{factorial function}
 \end{figure}
 
-Die Funktion, abgebildet in \ref{fig:factorial} nimmt einen vorzeichenlosen Integer als Argument und gibt als Ergebnis ebenfalls einen vorzeichenlosen Integer zurück. Dabei ist \textbf{int} jedoch betriebssystemabhängig definiert. Für die meisten Systeme kann jedoch angenommen werden, dass es sich dabei um ein \textbf{4 Byte} großes Wort handelt, d.h für den Rückgabewert kommen Werte innerhalb des Wertebereichs $  W = [0,2^{32}-1] $ in Frage. Aufgrund des extrem schnellen Wachstums von $ n! $ ist dies ein sehr beschränkender Faktor, der bei der Nutzung unbedingt mit zu berücksichtigen ist, da es schnell zu einem Überlauf und damit zu einer Verfälschung des Ergebnisses kommen kann. In Zeile 2 wird danach geprüft, ob der übergebene Wert größer 1 ist. Sollte dies der Fall sein, wird das  Produkt von i und dem Ergebnis des Rekursiven Aufrufs von $ f(i-1) $ zurückgegeben. Andernfalls wird die Konstante 1 als Rückgabewert der Funktion genutzt, siehe Zeile 5.
+Die Funktion, oben abgebildet, nimmt einen vorzeichenlosen Integer als Argument und gibt als Ergebnis ebenfalls einen vorzeichenlosen Integer zurück. Dabei ist \textbf{int} jedoch betriebssystemabhängig definiert. Für die meisten Systeme kann jedoch angenommen werden, dass es sich dabei um ein \textbf{4 Byte} großes Wort handelt, d.h für den Rückgabewert kommen Werte innerhalb des Wertebereichs $  W = [0,2^{32}-1] $ in Frage. Aufgrund des extrem schnellen Wachstums von $ n! $ ist dies ein sehr beschränkender Faktor, der bei der Nutzung unbedingt mit zu berücksichtigen ist, da es schnell zu einem Überlauf und damit zu einer Verfälschung des Ergebnisses kommen kann. In Zeile 2 wird danach geprüft, ob der übergebene Wert größer 1 ist. Sollte dies der Fall sein, wird das  Produkt von i und dem Ergebnis des Rekursiven Aufrufs von $ f(i-1) $ zurückgegeben. Andernfalls wird die Konstante 1 als Rückgabewert der Funktion genutzt, siehe Zeile 5.
 \newpage
 
 \subsubsection{Aufruf}

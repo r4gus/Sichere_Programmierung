@@ -1,0 +1,587 @@
+\documentclass[12pt]{article}
+\parindent0em
+\parskip 1ex plus 0.4ex minus 0.4ex
+
+\usepackage[a4paper,vmargin=30mm,hmargin=25mm]{geometry}
+\usepackage{polyglossia}
+\setdefaultlanguage{german}
+\usepackage{fontspec}
+\usepackage{lipsum}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+
+\definecolor{lstbackground}{rgb}{0.95,0.95,1}      % hellgruener Rahmen
+\lstset{language=Python}
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  backgroundcolor=\color{lstbackground},
+  keywordstyle=\bfseries\ttfamily\color{blue},
+  stringstyle=\color{orange!50!black}\ttfamily,
+  commentstyle=\color{gray}\ttfamily,
+  showstringspaces=false,
+  flexiblecolumns=false,
+  tabsize=4,
+  numbers=left,
+  numberstyle=\tiny,
+  numberblanklines=true,
+  stepnumber=1,
+  numbersep=10pt,
+  xleftmargin=15pt,
+  literate=%
+  {Ö}{{\"O}}1
+  {Ä}{{\"A}}1
+  {Ü}{{\"U}}1
+  {ß}{{\ss}}1
+  {ü}{{\"u}}1
+  {ä}{{\"a}}1
+  {ö}{{\"o}}1
+  {~}{{\textasciitilde}}1
+}
+
+\begin{document}
+
+\begin{center}
+  \textbf{\LARGE Sichere Programmierung} \\[1ex]%
+  \textbf{\Large Projekt 3}\\[2ex] %
+  David Pierre Sugar\\ %
+  (76050) \\ %
+  Julian Sobott\\ %
+  (76511) \\ %
+  
+\end{center}
+
+% ****************************************************************************
+\section{Einleitung}
+% ****************************************************************************
+Nachdem wir uns während des letzten Praktikums grundlegend mit Assembler und dem GDB auseinander gesetzt haben, wird es nun Zeit diese neu gewonnenen Fähigkeiten zu nutzen um einen größeren Assembler-Code-Block zu analysieren.
+\newline
+\newline
+Wie auch im letzten Praktikum greifen wir dabei auf die \textbf{GEF} Erweiterung für GDB zu.
+
+% ****************************************************************************
+\section{Ein interessanter Shellcode}
+% ****************************************************************************
+Auf den ersten Blick scheint der hier vorliegende Shellcode wirklich interessant. Beim überfliegen der Codezeilen fällt dabei auf, dass mittels \texttt{PUSH} und \texttt{POP} Operationen überdurchschnittlich oft der \textbf{Stack verändert wird}. Auch werden in einigen Zeilen bisher noch nicht zuordnungsbare \textbf{Konstanten} auf den Stack gepushed. Am Schluss wird jedoch ein \textbf{Systemcall} ausgeführt was dafür spricht, dass die für den Systemcall nötigen Daten auf dem Stack vorbereitet werden.
+\newline
+\newline
+Da sich der Ablauf jedoch nicht so ohne weiteres ablesen lässt, wird im ersten Schritt der Shellcode \texttt{Zeile für Zeile} analysiert.
+
+% ----------------------------------------------------------------------------
+\subsection{Analyse}
+% ----------------------------------------------------------------------------
+Bei der Analyse von Assembler Code sollte man sich als erstes bewusst machen, \textbf{welche Register} involviert sind und wie der zugehörige \textbf{Stack Frame} ausgelegt ist. Dafür beginnt man in der ersten Zeile, analysiert diese und hält mögliche Veränderungen von Registern und Stack fest. Diesen Schritt wiederholt man Schritt für Schritt in jeder Code Zeile. Dabei sollte man dem Programmfluss folgen, d.h. bei einem Branch fährt man, mit der Analyse, beim angegebenen Sprungziel fort.
+\newline
+\newline
+Das folgende Diagramm zeigt die vollständige Analyse des Shellcodes. Dabei werden teilweise mehrere Instruktionen in einem Schritt behandelt, wenn diese logisch zusammenhängen.
+\newline
+
+\begin{lstlisting}
+Vorbedingung:
+
+STACK:
+---------------------------- <- RSP
+
+REGISTER:   -
+
+1. #######################################################
+
+Code:
+xor     rcx, rcx
+push    rcx
+
+STACK:
+----------------------------
+|           0x0            |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+
+2. #######################################################
+
+Code:
+mov rcx, 0x68732f6e69622fff
+
+STACK:
+----------------------------
+|           0x0            |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x68732f6e69622fff
+
+3. #######################################################
+
+Code:
+shr rcx, 0x8    ; rcx >> 8
+
+STACK:
+----------------------------
+|           0x0            |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0068732f6e69622f
+
+
+4. #######################################################
+
+Code:
+push rcx
+
+STACK:
+----------------------------
+|           0x0            |
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0068732f6e69622f
+
+5. #######################################################
+
+Code:
+push rsp
+
+STACK:
+----------------------------
+|           0x0            |
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|            A             |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0068732f6e69622f
+
+6. #######################################################
+
+Code:
+pop rdi
+
+STACK:
+----------------------------
+|           0x0            |
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A/ RSP
+
+REGISTER:   RCX = 0x0068732f6e69622f
+            RDI = A
+
+
+7. #######################################################
+
+Code:
+xor     rcx, rcx
+push    rcx
+
+STACK:
+----------------------------
+|           0x0            |
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+
+8. #######################################################
+
+Code:
+push word 0x632d
+
+STACK:
+----------------------------
+|           0x0            |
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+
+9. #######################################################
+
+Code:
+push rsp
+
+STACK:
+----------------------------
+|           0x0            |        
+----------------------------
+|   0x0068732f6e69622f     |    
+---------------------------- <- A
+|           0x0            |    
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|            B             |    
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+
+10. #######################################################
+
+Code:
+pop rbx
+
+STACK:
+----------------------------
+|           0x0            |        
+----------------------------
+|   0x0068732f6e69622f     |    
+---------------------------- <- A
+|           0x0            |    
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B/ RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+
+11. #######################################################
+
+Code:
+xor     rcx, rcx
+push    rcx
+
+STACK:
+----------------------------
+|           0x0            |        
+----------------------------
+|   0x0068732f6e69622f     |        
+---------------------------- <- A
+|           0x0            |        
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |        
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+
+
+12. #######################################################
+
+Code:
+jmp     command
+call    execve
+data:   db "ls -lA"     ; Die Adresse des Strings wird
+                        ; wird als Rücksprungadresse auf den Stack
+                        ; gepushed
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |    
+----------------------------
+|            x-------------|------------> "ls -lA"
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+
+13. #######################################################
+
+Code:
+pop     rdx
+push    rdx
+
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |    
+----------------------------
+|            x-------------|------------> "ls -lA"
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+            RDX = PTR to "ls -lA"
+
+14. #######################################################
+
+Code:
+xor byte [rdx+5], 0x41      ; ersetze A durch \0 (ASCII 0x41 = 'A')
+
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |    
+----------------------------
+|            x-------------|------------> "ls -l\0"
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+            RDX = PTR to "ls -l\0"
+
+15. #######################################################
+
+Code:
+push rbx
+
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |    
+----------------------------
+|            x-------------|------------> "ls -l\0"
+----------------------------
+|            B             |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+            RDX = PTR to "ls -l\0"
+
+
+16. #######################################################
+
+Code:
+push rdi
+
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |    
+----------------------------
+|            x-------------|------------> "ls -l\0"
+----------------------------
+|            B             |
+----------------------------
+|            A             |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+            RDX = PTR to "ls -l\0"
+
+17. #######################################################
+
+Code:
+push rsp
+
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |    
+----------------------------
+|            x-------------|------------> "ls -l\0"
+----------------------------
+|            B             |
+----------------------------
+|            A             |
+---------------------------- <- C
+|            C             |
+---------------------------- <- RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+            RDX = PTR to "ls -l\0"
+
+18. #######################################################
+
+Code:
+pop rsi
+
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |    
+----------------------------
+|            x-------------|------------> "ls -l\0"
+----------------------------
+|            B             |
+----------------------------
+|            A             |
+---------------------------- <- C/ RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+            RDX = PTR to "ls -l\0"
+            RSI = C
+
+19. #######################################################
+
+Code:
+xor rdx, rdx
+mov al, 0x3B
+
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     |
+---------------------------- <- A
+|           0x0            |
+----------------------------
+|          0x632d          |        2-Bytes
+---------------------------- <- B
+|           0x0            |    
+----------------------------
+|            x-------------|------------> "ls -l\0"
+----------------------------
+|            B             |
+----------------------------
+|            A             |
+---------------------------- <- C/ RSP
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+            RDX = 0x0
+            RSI = C
+            RAX = 0x000000000000003B
+
+
+20. #######################################################
+
+Code:                   SYSCALL
+
+\end{lstlisting}
+
+\newpage
+\begin{center}
+    {\Large Zum Zeitpunk des Systemcalls liegt folgender Zustand vor.}
+\end{center}
+
+\begin{lstlisting}
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|   0x0068732f6e69622f     | <--------------------------
+----------------------------                           |
+|           0x0            |                           |
+----------------------------                           |
+|          0x632d          | <-----------------------  |
+----------------------------                        |  |
+|           0x0            |                        |  |
+----------------------------                        |  |
+|            x-------------|------------> "ls -l\0" |  |
+----------------------------                        |  |
+|            B-------------|-------------------------  |
+---------------------------|                           |
+|            A-------------|----------------------------
+---------------------------- <- C
+
+REGISTER:   RCX = 0x0
+            RDI = A
+            RBX = B
+            RDX = 0x0
+            RSI = C
+            RAX = 0x000000000000003B
+
+\end{lstlisting}
+
+Als nächstes gilt es zu klären, welcher Systemcall aufgerufen wird und welche Argumente dabei übergeben werden. Dazu muss man sich jedoch über die \textbf{Systemcall Calling Convention}, für x86-64Bit, im klaren sein.
+
+% *****************************************************************
+\subsubsection{Systemcalls}
+% *****************************************************************
+Der Linux Kernel stellt eine Reihe von Operationen bereit, die er stellvertretend für andere Prozesse ausführen kann. Dazu zählen u.a. Operationen zum allozieren von Speicher auf dem Heap oder auch Zugriffe auf Dateien. Die Schnittstelle bildet dabei die \textbf{syscall} Instruktion für neuere 64-Bit Systeme, bzw. die \textbf{0x80} Instruktion für ältere 32-Bit Systeme.
+
+\subsubsection*{Calling Convention}
+Die Operation, die der Kernel für einen Prozess ausführen soll wird durch die sog. \textbf{Syscall Number} spezifiziert, die in das \texttt{RAX} Register geschrieben wird. So wird ein \texttt{READ} Befehl z.B. durch die Nummer \textbf{0x0} angegeben.
+\newline
+\newline
+Die Argumente für jeden Systemcall werden \textbf{mittels Register} übergeben. Für 64 Bit Programme wären dies, in der angegebenen Reihenfolge: \texttt{RDI, RSI, RDX, RCX, R10, R8, R9}.
+\newline
+\newline
+Nachdem die jeweilige Syscall Number in das RAX Register geschrieben wurde und die Argumente ebenfalls in die entsprechenden Register, kann mit dem \texttt{syscall} Befehl eine Anfrage abgesetzt werden.
+
+
+\subsubsection*{Ablauf}
+Durch die \texttt{syscall} Instruktion wechselt der Prozessor vom \textbf{User Mode} in den \textbf{Kernel Mode} und ruft den \textbf{Trap Handler} auf. Dieser überprüft ob es sich bei dem in RAX hinterlegten Wert um eine valide Syscall Number handelt und ob zulässige Argumente übergeben wurden. Falls ja indiziert der Trap Handler die \textbf{Sycall Tabelle} um die Adresse der zur Syscall Number gehörenden \textbf{Systemcall Service Routine} zu erhalten und springt zu dieser.
+\newline
+\newline
+Die Systemcall Service Routine führt dann die gewünschte Aktion aus.{\Large AUSFÜHRLICHER }
+\newline
+\newline
+Eine vollständige Liste aller Systemcalls und der zu übergebenden Argumente findet sich online, z.B. \href{https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/}{hier}.
+
+
+% ----------------------------------------------------------------------------
+\subsection{Analyse Fortsetzung}
+% ----------------------------------------------------------------------------
+Da die Syscall Number immer über das \textbf{A-Register} angegeben wird, ist es nun eine Leichtigkeit herauszufinden, welcher Syscall im gegebenen Shellcode verwendet wird. Der Wert der zur Zeit des Syscalls in RAX steht ist \textbf{59}. Durch eine kurze Onlinerecherche ergibt sich damit, dass es sich hierbei um den \textbf{execve} Syscall handelt. Dieser hat folgende Struktur.
+\begin{lstlisting}
+execve(const char* filename, const char* const argv[], 
+    const char* const envp[])
+\end{lstlisting}
+\end{document}
+
+
+%%% Local Variables: 
+%%% TeX-PDF-mode: t
+%%% TeX-master: t
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-engine: xetex
+%%% End: 

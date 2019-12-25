@@ -575,7 +575,115 @@ Da die Syscall Number immer über das \textbf{A-Register} angegeben wird, ist es
 execve(const char* filename, const char* const argv[], 
     const char* const envp[])
 \end{lstlisting}
+
+% *****************************************************************
+\subsubsection{Exec}
+% *****************************************************************
+Die Familie der \textbf{exec} System Calls wir dazu genutzt den derzeit laufenden Prozess durch einen neuen Prozess zu ersetzen (siehe man execve). Die einzelnen Parameter haben dabei folgende Bedeutungen.
+
+\begin{description}
+    \item [\textbf{filename}] Nullterminierter String ($'\setminus0'$) des Programms, mit dem der derzeitige Prozess ersetzt werden soll.
+
+    \item [\textbf{argv}] Mit \texttt{'(char*) NULL'} terminiertes Array von Kommandozeilen Parametern als Strings. 
+
+    \item [\textbf{envp}] Mit \texttt{'(char*) NULL'} terminiertes Array von Environment-Variablen als Strings.
+\end{description}
+Bei Erfolg wird der derzeitige Prozess durch das in \texttt{filename} angegebene Programm ersetzt. Bei einem fehlerhaften Aufruf von execve, wird \texttt{-1} zurückgegeben.
+\newline
+\newline
+Um den derzeitigen Prozess z.B. durch eine Shell zu ersetzen, kann folgender Aufruf verwendet werden.
+\begin{lstlisting}
+execve("/bin/sh\0", NULL, NULL)
+\end{lstlisting}
+Hier wurde auf die Übergabe von Argumenten an den neuen Prozess verzichtet.
+\newline
+
+Schaut man sich nun das Layout des Stacks unmittelbar vor dem Aufruf von \texttt{syscall} an, kann man diesen in drei Teilbereiche gliedern, die jeweils für \texttt{filename, argv und envp stehen}. Weiterhin können die bisher noch nicht zuordnungsbaren Hexadezimalzahlen als Strings interpretiert werden. Dabei ist daran zu denken, dass Werte grundsätzlich im Little-Endian Format abgespeichert werden, d.h. das niederwertigste Byte wird an die unterste Speicheradresse geschrieben.
+
+\begin{lstlisting}
+STACK:
+----------------------------
+|           0x0            |    
+----------------------------
+|        "/bin/sh"         | ----------- filename
+---------------------------- <- A / argv[0]
+|           0x0            |                        
+----------------------------                        
+|           "-c"           |
+---------------------------- <- B / argv[1]
+|           0x0            |              ------------  
+----------------------------                          |
+|            x-------------|------------> "ls -l\0"   |
+----------------------------                          |-- argv
+|            B             |                          | 
+---------------------------|                          |
+|            A             |              ------------
+---------------------------- <- C
+
+REGISTER:   RDI = A     (filename)
+            RSI = C     (argv)
+            RDX = 0x0   (envp)
+
+STRINGS:
+            0x00  68  73  2f  6e  69  62   2f   = "/bin/sh"
+              |_| |_| |_| |_| |_| |_| |_| |_|
+               |   |   |   |   |   |   |   |
+              \0   h   s   /   n   i   b   /
+
+            0x63  2d                            = "-c"
+              |_| |_|
+               |   |
+               c   -
+
+\end{lstlisting}
+
+Die untersten 32 Bit des Stacks bilden das argv Array. Jeder 8 Bit Block hält dabei einen Zeiger auf einen nullterminierten String. Darüber liegen die Strings, die in argv verwendet werden. \textbf{argv[0]/ A} spezifiziert dabei das aufzurufende Programm, \textbf{argv[1]/ B} ist die zu verwendende kommandozeilenoption, "-c", die übergeben werden soll. Die gegebene Option sorgt dafür, dass der nach den Optionen folgende String von der Shell ausgeführt wird. \textbf{argv[2]/ x} ist das in der Shell auszuführende Programm.
+\newline
+\newline
+Mit diesen Informationen ergibt sich folgender Systemcall.
+
+\begin{lstlisting}
+char* argv[] = {"/bin/sh", "-c", "ls -l"};
+
+execve("/bin/sh", argv, (char*) NULL);
+\end{lstlisting}
+Dieser ersetzt den derzeitigen Prozess mit einer neuen Shell und führt in dieser das Programm \texttt{ls -l} aus.
+
+% ----------------------------------------------------------------------------
+\subsection{Implementierung}
+% ----------------------------------------------------------------------------
+Um den Shellcode zu implementieren, wird dieser Zeile für Zeile in eine Datei mit der Endung \textbf{.asm} übertragen, in diesem Fall \texttt{exec.asm}.
+\newline
+\newline
+Mit \texttt{nasm -f elf64 exec.asm} kann danach eine 64-Bit Object Datei erzeugt werden.
+\newline
+\newline
+Mit \texttt{ld -N exec.o -o exec} kann diese dann zu einer ausführbaren Datei gelinkt werden, um sie danach auszuführen. Wichtig ist, dass die \textbf{-N} Option mit angegeben wird, da die Text Section standardmäßig nicht schreibbar ist, wodurch jeder Versuch zu einem Segmentation fault führt.
+
+\begin{lstlisting}[caption={Ohne -N Option}, captionpos=t]
+>> nasm -f elf64 exec.asm
+>> ld exec.o -o exec
+>> ./exec
+[1]    2822 segmentation fault (core dumped)  ./exec
+\end{lstlisting}
+
+
+\begin{lstlisting}[caption={Mit -N Option}, captionpos=t]
+>> nasm -f elf64 exec.asm
+>> ld -N exec.o -o exec
+>> ./exec
+total 12
+-rwxr-xr-x 1 sugar sugar 848 Dec 25 14:21 exec
+-rw-r--r-- 1 sugar sugar 754 Dec 25 14:11 exec.asm
+-rw-r--r-- 1 sugar sugar 736 Dec 25 14:12 exec.o
+\end{lstlisting}
+
+% ----------------------------------------------------------------------------
+\subsection{Entwicklung eins Python-Skript}
+% ----------------------------------------------------------------------------
+
 \end{document}
+
 
 
 %%% Local Variables: 

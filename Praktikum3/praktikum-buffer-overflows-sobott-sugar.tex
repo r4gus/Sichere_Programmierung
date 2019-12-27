@@ -722,7 +722,166 @@ Wichtig ist, dass Python2 verwendet wird da unter Python3 für Bytes die \textbf
 Length: 65
 \end{lstlisting}
 
-Als nächstes gilt es den Shellcode noch mit einem NOP Sled sowie einer Rücksprungadresse zu versehen um die letztendliche Payload zu erhalten. Dafür muss aber zuerst noch das \textbf{hackme} Programm analysiert werden, um die Größe des Sleds richtig wählen zu können.
+Als nächstes gilt es den Shellcode noch mit einem \textbf{NOP Sled} sowie einer \textbf{Rücksprungadresse} zu versehen um die letztendliche Payload zu erhalten. Dafür muss aber zuerst noch das \textbf{hackme} Programm analysiert werden, um die Größe des Sleds richtig wählen zu können.
+
+
+% *****************************************************************
+\subsubsection{Analyse von hackme}
+% *****************************************************************
+\begin{lstlisting}[caption={hackme.c}, captionpos=t]
+#include <stdio.h>                                
+#include <string.h>
+
+void print(char* s) {
+    char buffer[200];
+
+    strcpy(buffer, s);  // SCHWACHSTELLE
+    printf("Anfang von buffer: %p\n", buffer);
+    printf("Inhalt von buffer: %s\n", buffer);
+}
+
+int main(int argc , char ** argv) {
+    if (argc == 2) {
+        print(argv [1]);
+    } else {
+        printf("Bitte ein Argument übergeben .\n");
+    }
+
+    return 0;
+}
+\end{lstlisting}
+
+Das Programm \texttt{hackme} wurde mit dem Kommandozeilenbefehl 
+\newline '\texttt{gcc -z execstack -fno-stack-protector hackme.c -o hackme}' compiliert. Durch die angegebene Option wird kein Canary Wert mit auf dem Stack hinterlegt, durch den normalerweise geprüft wird, ob eine Verletzung der Grenzen des Stack-Frames vorliegt. Außerdem wird mit \texttt{-z execstack} der Stack als ausführbar markiert, andernfalls könnte der Shellcode nicht ausgeführt werden und man müsste auf Alternativen wie z.B. \textbf{Return Oriented Programming (ROP)} ausweichen.
+\newline
+\newline
+Das Programm wird nun mittels \texttt{GDB} debugged.
+\begin{lstlisting}
+>> gdb hackme
+\end{lstlisting}
+Die Schwachstelle befindet sich in der \textbf{print()} Funktion. Diese benutzt \textbf{strcpy()} um den Inhalt eines Buffers in einen zweiten Buffer zu übertragen. Dabei wird jedoch die Größe des Ziel-Buffers nicht berücksichtigt, wodurch es zu einem Buffer-Overflow kommen kann. Genau diese Schwachstelle ist der Eintrittspunkt für unseren Shellcode.
+\newline
+Als nächstes wird die \texttt{print()} Funktion disassembliert.
+\begin{lstlisting}
+gef> disass print
+Dump of assembler code for function print:
+   push   rbp
+   mov    rbp,rsp
+   sub    rsp,0xe0              ; alloziert 224 Bytes auf dem Stack
+   mov    QWORD PTR [rbp-0xd8],rdi  ; speichert s auf dem Stack
+   mov    rdx,QWORD PTR [rbp-0xd8]
+   lea    rax,[rbp-0xd0]        ; rax := Adresse des Ziel Buffers
+   mov    rsi,rdx               ; Source
+   mov    rdi,rax               ; Target
+   call   0x1030 <strcpy@plt>
+   ...
+\end{lstlisting}
+Die gezeigten Befehle allozieren zuerst Speicher für den Buffer und den Parameter \texttt{s} auf dem Stack. Danach wird die Startadresse des allozierten Buffers in \texttt{RDI} und die Adresse des Quell-Buffers in \texttt{RSI} geschrieben.
+\newline
+\newline
+Damit ergibt sich folgendes Layout für den Stack-Frame.
+
+\begin{lstlisting}
+STACK:
+----------------------------
+|      RETURNADDRESS       |            8 Byte 
+----------------------------
+|       SAVED RBP          |            8 Byte
+---------------------------- <- RBP
+|                          |            8 Byte
+----------------------------
+|                          |
+|                          |
+|         BUFFER           |            200 Byte
+|                          |
+|                          |
+---------------------------- <- buffer
+|         char* s          |            8 Byte
+----------------------------
+|                          |            8 Byte
+---------------------------- <- RSP
+\end{lstlisting}
+Zwischen dem Anfang des Buffers und der Rücksprungadresse liegen \textbf{216 Bytes}, d.h. durch die Übergabe eines Strings w der Länge \textbf{|w| > 216}, an hackme, kann die Rücksprungadresse kontrolliert werden.
+\newline
+\newline
+\newline
+Um den Shellcode durch hackme ausführen zu können, muss nun eine geeignete Payload erstellt werden. Diese besteht aus einem NOP Sled, dem Shellcode und schlussendlich einer Adresse die in den Sled zeigt.
+\begin{lstlisting}
+      -------------------------
+      ||                      |
+      \/                      |
+|  N x '0x90' | Shellcode | ADDR |
+\end{lstlisting}
+NOPs sind Instruktionen, die zu keiner Veränderung des Zustands einzelner Register führen (außer RIP). Früher wurden solche Instruktionen häufig eingesetzt um auf die Ergebnisse vorangegangener Instruktionen zu warten, die noch nicht vorlagen. Damit der übergebene Shellcode ausgeführt werden kann, muss der Instruction Pointer so manipuliert werden, dass er auf den Anfang des übergebenen Codes Zeigt. Dies geschieht durch das Überschreiben der Rücksprungadresse. Durch das Überschrieben der Rücksprungadresse springt der Prozess nicht zurück in die aufrufende Funktion sondern an eine von uns gewünschte Stelle. Durch einen NOP Sled muss die Sprungadresse nicht mehr exakt angegeben werden, sondern nur noch in den Sled zeigen. Sobald der Prozess in den Sled gesprungen ist, 'rutscht' er einfach bis zur ersten Instruktion des Shellcodes durch. Dies vereinfacht die Injektion des Shellcodes. Dabei gilt, je größer der Sled um so besser.
+Ziel ist es nun NOP Sled und Adresse so zu wählen, dass das Programm den Shellcode ausführt. 
+\newline
+\newline
+Um die Rücksprungadresse überschreiben zu können, muss der übergebene String 216 Bytes lang sein, plus die \textbf{sechs Byte, die die Rücksprungadresse darstellen}. Der Shellcode selber ist 65 Bytes lang.
+Daraus ergibt sich, dass der NOP Sled $ 216 - 65 = 151 $ Bytes lang sein muss. Nach dem \texttt{strcpy()} aufruf sollte der Stack demnach wie folgt aussehen.
+
+\begin{lstlisting}
+STACK:
+----------------------------
+|          ADDR ===========|=======================
+----------------------------   --                 ||
+|                          |     |                ||
+|        SHELL CODE        |     |- 65 Bytes      ||
+|                          |     |                ||
+----------------------------   --                 ||
+|                          |     |                ||
+|     151 x '0x90'         |     |-- 151 Bytes    ||
+|                          |     |                ||
+|                          |<======================
+----------------------------   --
+\end{lstlisting}
+
+
+Nun gilt es noch eine \textbf{gültige Adresse} zu wählen, damit an die richtige Stelle im Stack gesprungen wird. In diesem Fall ist für Übungszwecke \textbf{ASLR} (address space layout randomization), eine zufällige Wahl der Speicheradressen, ausgeschaltet. Dies vereinfacht den Prozess der Adresswahl, da diese nur einmal ermittelt werden muss. Andernfalls müsste z.B. auf ein \textbf{Brute-Force} Ansatz zurückgegriffen werden, bei dem das Programm sooft ausgeführt wird, bis die Sprungadresse durch Zufall tatsächlich im NOP Sled liegt. Dies ist wahrscheinlicher als es sich anhört, da die ersten 12 Bit der Adresse statisch sind, was die Wahrscheinlichkeit für einen Treffer erhöht.
+\newline
+\newline
+Es gibt dabei verschiedene Stufen von ASLR, nämlich 0 (aus) , 1 und 2 (vollständig). Durch das Schreiben in die Datei '\texttt{/proc/sys/kernel/randomize\_va\_space}' kann dieser geändert werden.
+Um ASLR nun auf dem System temporär auszuschalten kann folgender Kommandozeilenbefehl verwendet werden, der die Zahl 0 in die genannte Datei schreibt.
+
+\begin{lstlisting}
+>> echo 0 > /proc/sys/kernel/randomize_va_space
+\end{lstlisting}
+Das Programm hackme kommt einem bei der Suche nach der richtigen Sprungadresse sogar noch zuvor, indem es die Adresse der Startadresse des Buffers beim Ausführen mit angibt. Andernfalls kann man auch GDB nutzen um eine geeignete Adresse zu erhalten.
+\newline
+\newline
+Zum Vergleich hier die Ausgabe einmal mit ASLR eingeschaltet und einmal ohne.
+\begin{lstlisting}[caption={ASLR enabled}, captionpos=t]
+» cat /proc/sys/kernel/randomize_va_space     
+2
+» ./hackme hello                              
+Anfang von buffer: 0x7ffdc776aec0
+Inhalt von buffer: hello
+» ./hackme hello                              
+Anfang von buffer: 0x7fffa0345140
+Inhalt von buffer: hello
+\end{lstlisting}
+
+\begin{lstlisting}[caption={ASLR disabled}, captionpos=t]
+» cat /proc/sys/kernel/randomize_va_space     
+0
+» ./hackme hello                              
+Anfang von buffer: 0x7fffffffdeb0
+Inhalt von buffer: hello
+» ./hackme hello
+Anfang von buffer: 0x7fffffffdeb0
+Inhalt von buffer: hello
+\end{lstlisting}
+Im ersten Beispiel ist ASLR eingeschaltet, d.h. randomize\_va\_space enthält den Wert 2. Jeder Aufruf von hackme führt zu einer gänzlich anderen Adresse, wobei sich die vorderen 12 Bit jeweils nicht verändern.
+\newline
+Im zweiten Beispiel ist ASLR augeschaltet. Hier werden bei jedem Aufruf die selben Adressen verwendet.
+
+% *****************************************************************
+\subsubsection{Den Shellcode ausführen}
+% *****************************************************************
+Nun wird es Zeit, die Theorie in die Praxis umzusetzen und erst einmal ohne Skript den Shellcode über hackme auszuführen. Dafür wird folgender Pyhton Befehl auf der Kommandozeile ausgeführt und danach durch Command Substitution, hackme als Argument übergeben.
+\begin{lstlisting}
+
+\end{lstlisting}
+
 \end{document}
 
 

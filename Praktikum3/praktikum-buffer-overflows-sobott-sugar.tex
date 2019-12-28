@@ -843,7 +843,7 @@ Es gibt dabei verschiedene Stufen von ASLR, nämlich 0 (aus) , 1 und 2 (vollstä
 Um ASLR nun auf dem System temporär auszuschalten kann folgender Kommandozeilenbefehl verwendet werden, der die Zahl 0 in die genannte Datei schreibt.
 
 \begin{lstlisting}
->> echo 0 > /proc/sys/kernel/randomize_va_space
+>> echo 0 | sudo tee /proc/sys/kernel/randomize_va_space
 \end{lstlisting}
 Das Programm hackme kommt einem bei der Suche nach der richtigen Sprungadresse sogar noch zuvor, indem es die Adresse der Startadresse des Buffers beim Ausführen mit angibt. Andernfalls kann man auch GDB nutzen um eine geeignete Adresse zu erhalten.
 \newline

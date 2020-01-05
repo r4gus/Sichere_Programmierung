@@ -10,7 +10,7 @@
 \usepackage{xcolor}
 \usepackage{listings}
 \usepackage{hyperref}
-
+\usepackage{graphicx}
 \definecolor{lstbackground}{rgb}{0.95,0.95,1}      % hellgruener Rahmen
 \lstset{language=Python}
 
@@ -558,10 +558,10 @@ Nachdem die jeweilige Syscall Number in das RAX Register geschrieben wurde und d
 
 
 \subsubsection*{Ablauf}
-Durch die \texttt{syscall} Instruktion wechselt der Prozessor vom \textbf{User Mode} in den \textbf{Kernel Mode} und ruft den \textbf{Trap Handler} auf. Dieser überprüft ob es sich bei dem in RAX hinterlegten Wert um eine valide Syscall Number handelt und ob zulässige Argumente übergeben wurden. Falls ja indiziert der Trap Handler die \textbf{Sycall Tabelle} um die Adresse der zur Syscall Number gehörenden \textbf{Systemcall Service Routine} zu erhalten und springt zu dieser.
+Durch die \texttt{syscall} Instruktion wechselt der Prozessor vom \textbf{User Mode} in den \textbf{Kernel Mode} und ruft den \textbf{Trap Handler} auf. Dieser überprüft ob es sich bei dem in RAX hinterlegten Wert um eine valide Syscall Number handelt. Falls ja indiziert der Trap Handler die \textbf{System Call Service Routine Table} um die Adresse der zur Syscall Number gehörenden \textbf{Systemcall Service Routine} zu erhalten und springt zu dieser.
 \newline
 \newline
-Die Systemcall Service Routine führt dann die gewünschte Aktion aus.{\Large AUSFÜHRLICHER }
+Die Systemcall Service Routine prüft als erstes, ob die übergebenen Argumente, falls es welche gibt, valide sind, z.B. ob Adressen an erlaubte Stellen im Speicher zeigen und führt danach die gewünschte Aktion aus. Der Ablauf eines Systemcalls ist dabei natürlich noch viel komplexer, für unsere Zwecke reicht in diesem Fall jedoch ein grundlegendes Verständnis.
 \newline
 \newline
 Eine vollständige Liste aller Systemcalls und der zu übergebenden Argumente findet sich online, z.B. \href{https://blog.rchapman.org/posts/Linux_System_Call_Table_for_x86_64/}{hier}.
@@ -912,6 +912,55 @@ Hier wird der Python Kommandozeilen-Interpreter genutzt, der durch das -c Flag e
 % *****************************************************************
 Die erlangten Erkenntnisse wurden im Skript \texttt{hack.py} zusammengeführt.
 
+\lstinputlisting{Code/hack.py}
+
+Das Skript benötigt zwei Argumente, nämlich einmal den \texttt{auszuführenden Befehl} und zum anderen die \texttt{Adresse} an die gesprungen werden soll, um den Shellcode auszuführen. Dies ist möglich, da \texttt{hackme} diese Adresse bereits ausgibt und sich aufgrund ausgeschaltetem ASLR eigentlich auch nicht mehr ändert.
+\newline
+Der Shellcode wurde als ein Docstring in der Datei hinterlegt (siehe Zeile 13-55). Zwei stellen werden dabei abhängig von den übergebenen Argumenten dynamisch angepasst. Das zu XORende Byte, um einen Null Terminator zu erhalten, hängt von der Länge des übergebenen Strings ab. Die Länge wird dabei einfach mit \textbf{len(string)} berechnet (siehe Zeile 9) und danach an der entsprechenden Stelle eingefügt (Z. 41).
+\newline
+Der auszuführende Befehl wird in Zeile 55 and den Shellcode mit angehängt.
+\newline
+Danach wird der Shellcode assembliert und in einen Hex-String, wie oben beschrieben, umgewandelt (siehe Zeile 58 - 83).
+\newline
+Im Anschluss wird die Payload zusammengesetzt, die sich aus Shellcode, Padding und Rücksprungadresse zusammensetzt. Da je nach Länge des Shellcodes unterschiedlich viel Padding benötigt wird, wird dieses in Z. 88 dynamisch berechnet.
+\newline
+In Zeile 93 bis 98, wird die Adresse in einen Hexadezimalstring umgewandelt. Dabei wird als erstes der \texttt{0x} Präfix entfernt (Z. 93). Danach wird der String in zweier Paare aufgeteilt, die in einer Liste gespeichert werden. Die liste wird dann umgedreht, da die Bytes aufgrund von Little-Endian in umgekehrter Reihenfolge übergeben werden müssen. Danach wird and jedes Paar ein hex-Präfix angehängt und die einzelnen Teile wieder zusammengefügt.
+\newline
+Schlussendlich wird dann mittels \texttt{os.system()}, hackme mit der Payload als Argument ausgeführt.
+
+\begin{lstlisting}
+./hack.py "ls -l" 0x7fffffffdd50
+...
+total 84
+-rw-rw-r-- 1 tux tux   752 Jan  5 15:36 assembly.asm
+-rwxrwxr-x 1 tux tux   489 Jan  5 11:45 convert.py
+-rwxrwxr-x 1 tux tux    90 Jan  5 10:48 ding.sh
+-rwxrwxr-x 1 tux tux   848 Jan  5 10:20 exec
+...
+\end{lstlisting}
+
+Somit lassen sich nun beliebige Kommandos über hackme, mittels des Skripts ausführen.
+
+% ----------------------------------------------------------------------------
+\subsection{Weitere Beispiele}
+% ----------------------------------------------------------------------------
+\begin{figure}[h!]
+	\includegraphics[width=\textwidth]{Pictures/ls-a-t.png}
+	\caption{ls -a -t /usr/bin}
+	\label{fig:ls}
+\end{figure}
+
+\begin{figure}[h!]
+	\includegraphics[width=\textwidth]{Pictures/ps.png}
+	\caption{ps ax}
+	\label{fig:ps}
+\end{figure}
+
+\begin{figure}[h!]
+	\includegraphics[width=\textwidth]{Pictures/passwd.png}
+	\caption{cat /etc/passwd}
+	\label{fig:cat}
+\end{figure}
 
 
 \end{document}

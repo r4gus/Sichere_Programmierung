@@ -1,0 +1,108 @@
+\documentclass[12pt]{article}
+\parindent0em
+\parskip 1ex plus 0.4ex minus 0.4ex
+
+\usepackage[a4paper,vmargin=30mm,hmargin=25mm]{geometry}
+\usepackage{polyglossia}
+\setdefaultlanguage{german}
+\usepackage{fontspec}
+\usepackage{lipsum}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{graphicx}
+\definecolor{lstbackground}{rgb}{0.95,0.95,1}      % hellgruener Rahmen
+\lstset{language=Python}
+
+\lstset{
+  basicstyle=\small\ttfamily,
+  backgroundcolor=\color{lstbackground},
+  keywordstyle=\bfseries\ttfamily\color{blue},
+  stringstyle=\color{orange!50!black}\ttfamily,
+  commentstyle=\color{gray}\ttfamily,
+  showstringspaces=false,
+  flexiblecolumns=false,
+  tabsize=4,
+  numbers=left,
+  numberstyle=\tiny,
+  numberblanklines=true,
+  stepnumber=1,
+  numbersep=10pt,
+  xleftmargin=15pt,
+  literate=%
+  {Ö}{{\"O}}1
+  {Ä}{{\"A}}1
+  {Ü}{{\"U}}1
+  {ß}{{\ss}}1
+  {ü}{{\"u}}1
+  {ä}{{\"a}}1
+  {ö}{{\"o}}1
+  {~}{{\textasciitilde}}1
+}
+
+\begin{document}
+
+\begin{center}
+  \textbf{\LARGE Sichere Programmierung} \\[1ex]%
+  \textbf{\Large Projekt 4}\\[2ex] %
+  David Pierre Sugar\\ %
+  (76050) \\ %
+  Julian Sobott\\ %
+  (76511) \\ %
+  
+\end{center}
+
+\tableofcontents
+
+% ****************************************************************************
+\section{Einleitung}
+% ****************************************************************************
+In diesem Praktikum geht es darum Konzepte, die in der Vorlesung \textit{Einführung in die IT-Sicherheit} erklärt wurden, in Java zu implementieren. Hierzu wird die Kryptographie-API von Java verwendet.
+
+% ****************************************************************************
+\section{Aufgabe 1: Kryptographische Hashfunktion}
+% ****************************************************************************
+
+In dieser Aufgabe soll die Erzeugung und Verifikation einer Prüfsumme implementiert werden. Als Hashalgorithmus soll hier \texttt{SHA-256} verwendet werden.
+Für die Aufgabe wurden zwei statische Methoden implementiert. \texttt{public static byte[] createChecksum(String message)} und \texttt{public static boolean verifyChecksum(byte[] checksum, String message)}. Die erste erzeugt eine Prüfsumme und die zweite verifiziert ob ein String dieselbe Prüfsumme erzeugt.
+
+Fürs Erzeugen wird eine \texttt{MessageDigest} Instanz, welche mit \texttt{SHA-256} arbeitet, geholt. Mit dieser wird dann, der String in einen entsprechenden Hash Wert umgewandelt.
+
+Fürs Verifizieren, wird auf dieselbe Weise von dem neuen String die Checksum erstellt. Ob die beiden gleich sind, wird mit der statischen Methode \texttt{MessageGigest.isEqual()} überprüft.
+
+Zur demosntration der beiden Methoden, wurden in der \texttt{main} Methode 2 Strings erstellt. Die Verifikation gibt true zurück, wenn beide Strings gleich sind und false, wenn sie unterschiedlich sind.
+
+
+% ****************************************************************************
+\section{Aufgabe 2: Symmetrische Verschlüsselung}
+% ****************************************************************************
+
+
+% ****************************************************************************
+\section{Aufgabe 3 Asymmetrische Verschlüsselung}
+% ****************************************************************************
+Diese Aufgabe soll die Nutzung des \texttt{RSA} Algorithmus für die asymmetrische Verschlüsselung zeigen. Ein Text soll mit einem public key verschlüsselt werden, und mit dem entsprechendem private key wieder entschlüssselt werden.
+
+Hierzu wird als erstes mithilfe eines \texttt{KeyPairGenerator} ein Schlüsselpaar für die Verschlüsselung mit RSA erstellt. Auf die beiden Schlüssel kann dann mithilfe von gettern zugegriffen werden.
+
+Als nächstes wird ein Objekt, welches für die Ver- und Entschlüsselung verantwortlich ist, mithilfe der factory Methode \texttt{getInstance} geholt. Dieses kann mehrmal verwendet werden, muss aber vor jeder Verwendung initialisiert werden. Hierbei muss übergeben werden, ob ver- oder entschlüsselt werden soll, und der jeweilige passende key. 
+Mit der \texttt{doFinal} Methode, kann dann der ver-/entschlüsselungs Prozess abgeschlossen werden. Hierbei wird immer ein \texttt{byte[]} zurückgegebn, welches den Text enthält. 
+Um den verschlüsselten Text schöner auf der Konsole anzuzeigen, wird er noch in Base64 umgewandelt. Außerdem wird das \texttt{byte[]} an den Konstruktor der Klasse \texttt{String} übergeben, um den Text als zusammenhängenden Text und nicht als Array auszugeben.
+
+% ****************************************************************************
+\section{Aufgabe 4: Digitale Signatur}
+% ****************************************************************************
+
+
+
+\end{document}
+
+
+
+%%% Local Variables: 
+%%% TeX-PDF-mode: t
+%%% TeX-master: t
+%%% coding: utf-8
+%%% mode: latex
+%%% TeX-engine: xetex
+%%% End: 

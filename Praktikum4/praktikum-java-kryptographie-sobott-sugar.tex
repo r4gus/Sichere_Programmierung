@@ -76,6 +76,125 @@ Zur demosntration der beiden Methoden, wurden in der \texttt{main} Methode 2 Str
 % ****************************************************************************
 \section{Aufgabe 2: Symmetrische Verschlüsselung}
 % ****************************************************************************
+Symmetrische Verschlüsselung ist ein Weg, Nachrichten vor unerwünschten
+Einblicken zu schützen. Symmetrisch heißt dabei, dass der selbe Key zum ver-/
+und wieder endschlüsseln verwendet wird. Ein Beispiel hierfür wäre der \texttt{AES}
+(Advanced Encryption Standard) Algorithmus, der auch \texttt{Rijndael}
+Algorithmus genannt wird, in Anlehnung an die Erfinder Vincent Rijmen und Joan
+Daemen. Symmetrische Verschlüsselungen bieten, einen angemessen großen Key
+vorrausgesetzt, guten Schutz und eine schnelle Ver-/ Entschlüsselung, 
+jedoch muss zur sicheren Übermittlung auf andere
+Verschlüsselungsverfahren wie RSA zurückgegriffen werden, da diese sonst leicht
+von Dritten abgegriffen werden können.
+
+\subsection{Cipher}
+Der AES ist ein Block Cipher, d.h. es werden jeweils Blöcke zu je \texttt{128 Bit}
+verschlüsselt, dabei werden die \texttt{Key-Längen 128, 192 und 256 Bit}
+unterstützt. Die Länge des Keys gibt dabei die Anzahl an Transformationsrunden
+vor, die für die Verschlüsselung durchlaufen werden. Um den Text wieder zu
+entschlüsseln, werden die Runden rückwärts durchlaufen. Die Transformationen
+finden dabei auf einer 4x4 Byte Matrix statt.
+
+\subsection{Implementierung}
+Das Beispiel besteht darin, einen String zu verschlüsseln, den Cipher Text auf
+Standard Out auszugeben, den Cipher Text wieder zu entschlüsseln und auch den
+entschlüsselten Text auf der Kommandozeile auszugeben. Sollte schlussendlich der
+anfangs verschlüsselte Text richtig ausgegeben werden, so kann davon ausgeganen werden,
+dass die symmetrische Verschlüsselung mittels AES richtig ausgeführt wurde.
+
+\subsubsection{Key erstellen}
+Als erstes wird ein zufälliger Key erstellt, der dann zusammen mit dem AES
+Cipher verwendet werden soll. Dafür wird die Methode \texttt{getAESKey()}
+aufgerufen, die einen \texttt{AES Key Generator} instanziert und danach mittels
+\texttt{init()} diesen Key Generator mit einer Key Größe von 256 initialisiert.
+Danach wird mit \texttt{generateKey()} der zufällige Key erstellt und zurück
+gegeben.
+
+\begin{lstlisting}
+SecretKey key = getAESKey();
+\end{lstlisting}
+
+\subsubsection{Initialisierungs-Vektor}
+Ein Initialisierungsvektor ist eine Zufallszahl, die als weitere Sicherheit in
+die Verschlüsselung mit eingebracht wird. Um das Brechen des Ciphers,
+z.B. mittels Dictionary Attack, zu
+erschweren wird der vorrausgegangene Cipher Block mit genutzt, um den derzeitigen
+Plaintext Block zu verschlüsseln. Da für den ersten Plaintext Block noch kein
+Cipher Block zur verfügung steht, der verwendet werden kann wird eine
+Zufallszahl, der IV, zur Verschlüsselung hinzugezogen.
+
+Dieser IV wird von \texttt{getIvSpec()} zurückgegeben. 
+
+\begin{lstlisting}
+IvParameterSpec ivSpec = getIvSpec();
+\end{lstlisting}
+
+Dabei nutzt die Methode
+einen Pseudo-Zufallszahl-Generator um ein Byte Array zu befüllen. Dieses Array
+wird dann als Argument genutzt, um mit \texttt{IvParameterSpec()} ein IV Objekt
+zu erzeugen.
+
+\subsubsection{Cipher}
+Um den Cipher zu initialisieren, wurde die Methode \texttt{initCipher()}
+implementiert. Dies erhällt \texttt{Key} und \texttt{IV}, sowie den Modus
+(ENCRYPT, DECRYPT) als Parameter und instanziert ein AES Cipher Objekt, das dann zur
+verschlüsselung verwendet werden kann.
+
+\begin{lstlisting}
+Cipher cipher = initCipher(key, Cipher.ENCRYPT_MODE, ivSpec);
+\end{lstlisting}
+
+\subsection{Verschlüsselung}
+Mittels \texttt{encrypt()} kann nun der Plain Text verschlüsselt werden. Dazu
+werden Cipher sowie Text and die Methode übergeben, zurück kommt der Cipher Text
+als Byte Array. Intern wird einfach nur \texttt{doFinal()} auf dem Cipher Objekt
+aufgerufen.
+
+\begin{lstlisting}
+byte cipherText[] = encrypt(cipher, pt);
+\end{lstlisting}
+
+\subsubsection{Ausgabe Cipher Text}
+Die Methode \texttt{printCipherText()} erhällte das Byte Array als Argument und
+gibt es in \texttt{Base 64} codiert auf der Kommandozeile aus.
+
+\begin{lstlisting}
+printCipherText(cipherText);
+\end{lstlisting}
+
+\subsubsection{Entschlüsselung}
+Nun muss der Text wieder entschlüsselt werden. Dazu wird das Cipher Objekt nun
+mit dem \texttt{DECRYPT} Mode initialisiert, dabei bleiben Key und IV die
+selben. Danach wird \texttt{decrypt()} aufgerufen. Die Methode ruft erneut
+\texttt{doFinal()} auf und entschlüsselt damit den übergebenen Cipher Text,
+zurück in den Ausgangstext.
+
+\begin{lstlisting}
+cipher.init(Cipher.DECRYPT_MODE, key, ivSpec);
+String new_pt = decrypt(cipher, cipherText);
+\end{lstlisting}
+
+\subsubsection{Ausgabe Plain Text}
+Schlussendlich wird nun auch der entschlüsselte Plain Text auf der Kommandozeile
+ausgegeben.
+
+\begin{lstlisting}
+System.out.println("Plain Text: " + new_pt); 
+\end{lstlisting}
+
+\subsection{Beispielausgabe}
+
+\begin{lstlisting}
+[sugar@jellyfish Code]$ java SymEncrypt 
+Cipher Text: lPSGD5vFeGS7KlTBZjX2RQ==
+Plain Text: Neo... Wake up!
+[sugar@jellyfish Code]$ java SymEncrypt 
+Cipher Text: OG5fVtza0u6P5RybQLLMGA==
+Plain Text: Neo... Wake up!
+[sugar@jellyfish Code]$ java SymEncrypt 
+Cipher Text: +wCZzQ9bfxIA9r1aGFjB8Q==
+Plain Text: Neo... Wake up!
+\end{lstlisting}
 
 
 % ****************************************************************************

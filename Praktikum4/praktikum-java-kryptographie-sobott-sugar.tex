@@ -211,7 +211,32 @@ Um den verschlüsselten Text schöner auf der Konsole anzuzeigen, wird er noch i
 % ****************************************************************************
 \section{Aufgabe 4: Digitale Signatur}
 % ****************************************************************************
+Digitale Signaturen werden genutzt, um die Authentizität, Integrität,
+Überprüfbarkeit und Nicht-Abstreitbarkeit von digitalen
+Dokumenten sicher zu stellen, gewährleisten aber in keinem Fall die Vertraulichkeit eines
+Dokuments. Zur digitalen Signatur eignen sich dabei die meisten
+asymmetrischen Verschlüsselungssysteme, wie z.B. RSA. RSA ist dabei aber anfällig für
+Attacken, sollte der selbe Text mehrmals mit dem Selben Schlüssel signiert
+werden.
 
+\subsection{Verfahren}
+Anfangs wird eine zufälliges Schlüsselpaar, bestehend aus Public-Key und
+Private-Key, erstellt. Das gewünschte Dokument wird dann zuerst gehased 
+und der Hash danach mittels RSA unter hinzunahme des Private-Key verschlüsselt.
+Danach kann der Hash an das Dukument mit angehängt werden. Um die Authentizität
+des Dokuments nun zu verifizieren kann jeder, der den Public-Key besitzt, den
+Hash entschlüsseln, selber nocheinmal das Dokument hashen und dann beide Hashes
+miteinander vergleichen. Stimmen diese überein, so kann davon ausgegangen
+werden, einen kollisionssicheren Hashing-Algorithmus vorrausgesetzt, dass das
+Dokument nicht verändert wurde und dass der Author tatsächlich die Person, mit
+dem zugehörigen Private-Key ist.
+
+\subsection{Implementierung}
+Das Beispiel besteht darin, einen Text mittels RSA digital zu signieren. Dieser
+wird dann auf der Konsole ausgegeben. Danach wird er wieder entschlüsselt um zu
+überprüfen ob das Dokument authentisch ist. Das Ergebnis wird ebenfalls wieder
+auf der Kommandozeile ausgegeben. Erwarte wird, dass der Text identisch zu dem
+ursprünglichen Plain-Text ist.
 
 
 \end{document}

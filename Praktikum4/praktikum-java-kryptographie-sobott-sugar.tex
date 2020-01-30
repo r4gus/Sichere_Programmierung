@@ -63,14 +63,47 @@ In diesem Praktikum geht es darum Konzepte, die in der Vorlesung \textit{Einfüh
 \section{Aufgabe 1: Kryptographische Hashfunktion}
 % ****************************************************************************
 
-In dieser Aufgabe soll die Erzeugung und Verifikation einer Prüfsumme implementiert werden. Als Hashalgorithmus soll hier \texttt{SHA-256} verwendet werden.
-Für die Aufgabe wurden zwei statische Methoden implementiert. \texttt{public static byte[] createChecksum(String message)} und \texttt{public static boolean verifyChecksum(byte[] checksum, String message)}. Die erste erzeugt eine Prüfsumme und die zweite verifiziert ob ein String dieselbe Prüfsumme erzeugt.
+\subsection{Hashing}
+
+Eine Hashfunktion wandelt eine beliebige Eingabe in eine Ausgabe fester Länge um. Das Ergebnis wird als \textit{Hash} oder auch  engl. \textit{digest} bezeichnet.
+Jede Hashfunktion, sollte dabei aber folgende Eigenschaften haben:
+\begin{itemize}
+\item \textbf{Einwegfunktion:} Das heißt der original Wert soll nicht aus dem Hash zurück gerechnet werden können.
+\item \textbf{Kollisionsresistenz:} Da der Wertebereich der Funktion kleiner als der Definitionsbereich, kann es zu Kollisionen kommen. Das heißt unterschiedliche Eingabe Werte erzeugen den gleichen Ausgabewert. Eine Hashfunktion sollte möglichst solche Kollisionen vermeiden.
+\item \textbf{Große Streuung:} Hashes von ähnlichen Werten sollen weit auseinander liegen. 
+\item \textbf{Effiziente Berechnung:} Das Hashen einer Eingabe sollte möglichst effizient sein. Aufgrund der Einwegfunktion, ist das berechnen der Eingabe aufgrund eines Hashes, bei modernen Hashfunktionen aber nicht effizient lösbar.
+\end{itemize}
+Hashes können unter anderem dafür verwendet werden, um Prüfsummen (engl. checksums) zu berechnen. 
+Diese Können dann dafür verwendet um die Integrität einer Nachricht zu bewahren. Das heißt es kann kontrolliert werden, dass die Nachricht nicht verändert wurde.
+
+\subsection{Implementierung}
+In dieser Aufgabe soll die Erzeugung und Verifikation einer solchen Prüfsumme implementiert werden. Als Hashalgorithmus soll hier \texttt{SHA-256} verwendet werden.
+Für die Aufgabe wurden zwei statische Methoden implementiert. \texttt{byte[] createChecksum(String message)} und \texttt{boolean verifyChecksum(byte[] checksum, String message)}. Die erste erzeugt eine Prüfsumme und die zweite verifiziert ob ein String dieselbe Prüfsumme erzeugt.
 
 Fürs Erzeugen wird eine \texttt{MessageDigest} Instanz, welche mit \texttt{SHA-256} arbeitet, geholt. Mit dieser wird dann, der String in einen entsprechenden Hash Wert umgewandelt.
 
-Fürs Verifizieren, wird auf dieselbe Weise von dem neuen String die Checksum erstellt. Ob die beiden gleich sind, wird mit der statischen Methode \texttt{MessageGigest.isEqual()} überprüft.
+\begin{lstlisting}
+MessageDigest md = MessageDigest.getInstance("SHA-256");
+return md.digest(message.getBytes());
+\end{lstlisting}
 
-Zur demosntration der beiden Methoden, wurden in der \texttt{main} Methode 2 Strings erstellt. Die Verifikation gibt true zurück, wenn beide Strings gleich sind und false, wenn sie unterschiedlich sind.
+Fürs Verifizieren, wird auf dieselbe Weise von dem neuen String die Checksum erstellt. Ob die beiden gleich sind, wird mit der statischen Methode \texttt{MessageDigest.isEqual()} überprüft.
+
+\begin{lstlisting}
+byte[] actual = createChecksum(message);
+return MessageDigest.isEqual(actual, checksum);
+\end{lstlisting}
+
+
+\subsection{Beispiel}
+Zur demosntration der beiden Methoden, wurden in der \texttt{main} Methode 2 Strings erstellt. Die Verifikation gibt true zurück, wenn beide Strings gleich sind und false, wenn sie unterschiedlich sind. Führt man das Programm erhält man die folgende Ausgabe
+
+\begin{lstlisting}
+Checksums are equal: true
+Checksums are equal: false
+\end{lstlisting}
+
+Das ganze könnte mithilfe von Verschlüsselung zum Beispiel verwendet werden, um Nachrichten zu versenden deren Integrität gewahrt werden muss.
 
 
 % ****************************************************************************
@@ -200,13 +233,83 @@ Plain Text: Neo... Wake up!
 % ****************************************************************************
 \section{Aufgabe 3 Asymmetrische Verschlüsselung}
 % ****************************************************************************
-Diese Aufgabe soll die Nutzung des \texttt{RSA} Algorithmus für die asymmetrische Verschlüsselung zeigen. Ein Text soll mit einem public key verschlüsselt werden, und mit dem entsprechendem private key wieder entschlüssselt werden.
 
+\subsection{Asymmetrische Verschlüsselung}
+
+Eine Asymmetrische Verschlüsselung wird dann verwendet, wenn der Schlüsselaustausch nicht geheim erfolgen kann. Es gibt ein Schlüsselpaar, welches aus einem \textbf{private key} und einem \textbf{public key} besteht. 
+Der public key kann für jeden zugänglich sein. Der private key muss aber privat bleiben und darf nicht von einer zweiten Instanz gekannt werden. Für den Nachrichtenaustausch, erstellt zuerst eine Instanz, ein solches Schlüsselpaar. Der public key wird dann an den Kommunikationspartner weiter geschickt. Dies muss nicht verschlüsselt sein, da der public key kein Geheimnis enthält. Der Kommunikationspartner kann nun eine Nachricht mit dem public key verschlüsseln und zurück senden. Diese Nachricht kann nur mit dem passenden  private key entschlüsselt werden.
+Dieses verfahren kann zum beispiel verwendet werden, um symmetrische Schlüssel auszutauschen. Asymmetrische Verschlüsselung ist im Vergleich zur symmetrischen langsamer und wird deshalb meist nur zu Beginn einer Kommunikation verwendet.
+
+\subsection{Implementierung}
+
+Diese Aufgabe soll die Nutzung des \texttt{RSA} Algorithmus für die asymmetrische Verschlüsselung zeigen. Ein Text soll mit einem public key verschlüsselt werden, und mit dem entsprechendem private key wieder entschlüssselt werden.
 Hierzu wird als erstes mithilfe eines \texttt{KeyPairGenerator} ein Schlüsselpaar für die Verschlüsselung mit RSA erstellt. Auf die beiden Schlüssel kann dann mithilfe von gettern zugegriffen werden.
 
-Als nächstes wird ein Objekt, welches für die Ver- und Entschlüsselung verantwortlich ist, mithilfe der factory Methode \texttt{getInstance} geholt. Dieses kann mehrmal verwendet werden, muss aber vor jeder Verwendung initialisiert werden. Hierbei muss übergeben werden, ob ver- oder entschlüsselt werden soll, und der jeweilige passende key. 
-Mit der \texttt{doFinal} Methode, kann dann der ver-/entschlüsselungs Prozess abgeschlossen werden. Hierbei wird immer ein \texttt{byte[]} zurückgegebn, welches den Text enthält. 
+\begin{lstlisting}
+// Schlüsselgenerierung
+KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("RSA");
+keyPairGen.initialize(keysize);
+keyPair rsaKeyPair = keyPairGen.generateKeyPair();
+
+// private und public key
+PublicKey publicKey = rsaKeyPair.getPublic();
+PrivateKey privateKey = rsaKeyPair.getPrivate();
+\end{lstlisting}
+
+
+Als nächstes wird ein Objekt, welches für die Ver- und Entschlüsselung verantwortlich ist, mithilfe der factory Methode \texttt{getInstance} geholt. Dieses kann mehrmal verwendet werden, muss aber vor jeder Verwendung initialisiert werden. Hierbei muss übergeben werden, ob ver- oder entschlüsselt werden soll, und der jeweilige passende key.
+
+\begin{lstlisting}
+Cipher rsa = Cipher.getInstance("RSA");
+
+// Verschlüsseln
+rsa.init(Cipher.ENCRYPT_MODE, publicKey);
+
+// Entschlüsseln
+rsa.init(Cipher.DECRYPT_MODE, privateKey);
+\end{lstlisting}
+
+Mit der \texttt{doFinal} Methode, kann dann der ver-/entschlüsselungs Prozess abgeschlossen werden. Hierbei wird immer ein \texttt{byte[]} zurückgegebn, welches den Text enthält.
+
+\begin{lstlisting}
+// Verschlüsselter Text
+byte[] cipherText = rsa.doFinal(plainText.getBytes());
+
+// Entschlüsselter Text
+byte[] plainTextAgain = rsa.doFinal(cipherText);
+\end{lstlisting}
+
 Um den verschlüsselten Text schöner auf der Konsole anzuzeigen, wird er noch in Base64 umgewandelt. Außerdem wird das \texttt{byte[]} an den Konstruktor der Klasse \texttt{String} übergeben, um den Text als zusammenhängenden Text und nicht als Array auszugeben.
+
+\begin{lstlisting}
+Base64.Encoder encoder = Base64.getEncoder();
+String message = encoder.encodeToString(cipherText);
+System.out.println("encrypted message: " + message);
+\end{lstlisting}
+
+\begin{lstlisting}
+System.out.println("decrypted message : " + new String(plainTextAgain));
+\end{lstlisting}
+
+Eine Ausgabe kann dann Beispielsweise wie folgt aussehen:
+\begin{lstlisting}
+\begin{lstlisting}
+System.out.println("decrypted message : " + new String(plainTextAgain));
+\end{lstlisting}
+
+\begin{lstlisting}
+Original message: Kryptographie macht immer noch Spass!!!
+
+encrypted message: GyHYxvw3nZiXt7LbqJAYPgn7idQKFRiawHbA7
+D6Qgq+eDOdHznt7dBc9+bTkqlCUvxvHUTZt4XPa+hYyKCfrdH/UI/NSm
+9rxjRIjdy3OcpBdA+6RqLga5jNIEPd9AJvhfLMUVbsHHY
++UQVoV4Fa5FX5TIEAfo4VQUXIvjmHngl5t6nNqdmjBqt4i8
+gsrO0ai2HYYJdowbkzj6lwu7sZPByCGibahXaO11GQ/eQUX83Z2K
+Kacazn/7KeG8HLhsNAUVp4TqJmRBEpOZwN2/CC0dDvMhXjZdvhI7zYd
+aOkXOf+hw0xbHZ2ahNdjPfMmYCLS4OWfSK0sDiaLbA==
+
+decrypted message : Kryptographie macht immer noch Spass!!!
+\end{lstlisting}
 
 % ****************************************************************************
 \section{Aufgabe 4: Digitale Signatur}

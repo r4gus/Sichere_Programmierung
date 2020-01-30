@@ -63,14 +63,47 @@ In diesem Praktikum geht es darum Konzepte, die in der Vorlesung \textit{Einfüh
 \section{Aufgabe 1: Kryptographische Hashfunktion}
 % ****************************************************************************
 
-In dieser Aufgabe soll die Erzeugung und Verifikation einer Prüfsumme implementiert werden. Als Hashalgorithmus soll hier \texttt{SHA-256} verwendet werden.
-Für die Aufgabe wurden zwei statische Methoden implementiert. \texttt{public static byte[] createChecksum(String message)} und \texttt{public static boolean verifyChecksum(byte[] checksum, String message)}. Die erste erzeugt eine Prüfsumme und die zweite verifiziert ob ein String dieselbe Prüfsumme erzeugt.
+\subsection{Hashing}
+
+Eine Hashfunktion wandelt eine beliebige Eingabe in eine Ausgabe fester Länge um. Das Ergebnis wird als \textit{Hash} oder auch  engl. \textit{digest} bezeichnet.
+Jede Hashfunktion, sollte dabei aber folgende Eigenschaften haben:
+\begin{itemize}
+\item \textbf{Einwegfunktion:} Das heißt der original Wert soll nicht aus dem Hash zurück gerechnet werden können.
+\item \textbf{Kollisionsresistenz:} Da der Wertebereich der Funktion kleiner als der Definitionsbereich, kann es zu Kollisionen kommen. Das heißt unterschiedliche Eingabe Werte erzeugen den gleichen Ausgabewert. Eine Hashfunktion sollte möglichst solche Kollisionen vermeiden.
+\item \textbf{Große Streuung:} Hashes von ähnlichen Werten sollen weit auseinander liegen. 
+\item \textbf{Effiziente Berechnung:} Das Hashen einer Eingabe sollte möglichst effizient sein. Aufgrund der Einwegfunktion, ist das berechnen der Eingabe aufgrund eines Hashes, bei modernen Hashfunktionen aber nicht effizient lösbar.
+\end{itemize}
+Hashes können unter anderem dafür verwendet werden, um Prüfsummen (engl. checksums) zu berechnen. 
+Diese Können dann dafür verwendet um die Integrität einer Nachricht zu bewahren. Das heißt es kann kontrolliert werden, dass die Nachricht nicht verändert wurde.
+
+\subsection{Implementierung}
+In dieser Aufgabe soll die Erzeugung und Verifikation einer solchen Prüfsumme implementiert werden. Als Hashalgorithmus soll hier \texttt{SHA-256} verwendet werden.
+Für die Aufgabe wurden zwei statische Methoden implementiert. \texttt{byte[] createChecksum(String message)} und \texttt{boolean verifyChecksum(byte[] checksum, String message)}. Die erste erzeugt eine Prüfsumme und die zweite verifiziert ob ein String dieselbe Prüfsumme erzeugt.
 
 Fürs Erzeugen wird eine \texttt{MessageDigest} Instanz, welche mit \texttt{SHA-256} arbeitet, geholt. Mit dieser wird dann, der String in einen entsprechenden Hash Wert umgewandelt.
 
-Fürs Verifizieren, wird auf dieselbe Weise von dem neuen String die Checksum erstellt. Ob die beiden gleich sind, wird mit der statischen Methode \texttt{MessageGigest.isEqual()} überprüft.
+\begin{lstlisting}
+MessageDigest md = MessageDigest.getInstance("SHA-256");
+return md.digest(message.getBytes());
+\end{lstlisting}
 
-Zur demosntration der beiden Methoden, wurden in der \texttt{main} Methode 2 Strings erstellt. Die Verifikation gibt true zurück, wenn beide Strings gleich sind und false, wenn sie unterschiedlich sind.
+Fürs Verifizieren, wird auf dieselbe Weise von dem neuen String die Checksum erstellt. Ob die beiden gleich sind, wird mit der statischen Methode \texttt{MessageDigest.isEqual()} überprüft.
+
+\begin{lstlisting}
+byte[] actual = createChecksum(message);
+return MessageDigest.isEqual(actual, checksum);
+\end{lstlisting}
+
+
+\subsection{Beispiel}
+Zur demosntration der beiden Methoden, wurden in der \texttt{main} Methode 2 Strings erstellt. Die Verifikation gibt true zurück, wenn beide Strings gleich sind und false, wenn sie unterschiedlich sind. Führt man das Programm erhält man die folgende Ausgabe
+
+\begin{lstlisting}
+Checksums are equal: true
+Checksums are equal: false
+\end{lstlisting}
+
+Das ganze könnte mithilfe von Verschlüsselung zum Beispiel verwendet werden, um Nachrichten zu versenden deren Integrität gewahrt werden muss.
 
 
 % ****************************************************************************
